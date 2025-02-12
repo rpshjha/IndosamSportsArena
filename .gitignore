@@ -1,0 +1,66 @@
+.DS_Store
+
+# Gradle files
+.gradle/
+build/
+captures/
+*.iml
+.gradle/caches/
+.gradle/wrapper/
+
+# Local configuration
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/shelf/
+
+# Dependency directories
+**/build/
+**/out/
+**/.cxx/
+**/.externalNativeBuild/
+
+# Android Studio files
+/.idea/
+*.iws
+*.ipr
+
+# Keystore files (important for security)
+*.jks
+*.keystore
+
+# Log files
+*.log
+
+# NDK and CMake files
+.cxx/
+.externalNativeBuild/
+
+# IntelliJ project files
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+
+# Miscellaneous
+.DS_Store
+*.swp
+*.swo
+*.swn
+*.bak
+
+# APKs
+*.apk
+*.aab
+
+# Google Services JSON (keep this private!)
+app/google-services.json
+android/app/google-services.json
+
+# Flutter-related files (if using Flutter)
+.flutter-plugins
+.flutter-plugins-dependencies
