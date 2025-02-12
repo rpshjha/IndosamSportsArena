@@ -1,0 +1,226 @@
+[
+  {
+    "id": 1,
+    "name": "Ajay Rawat",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 2,
+    "name": "Akshay Negi",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 3,
+    "name": "Anurag Sharma",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 4,
+    "name": "Anuj",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 5,
+    "name": "Dev Goyal",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 6,
+    "name": "Harsh Garg",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 7,
+    "name": "Jayesh Upadhyay",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 8,
+    "name": "Naren Rawat",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 9,
+    "name": "Nikhil Sharma",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 10,
+    "name": "Pranav Jha",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 11,
+    "name": "Prateek Garg",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 12,
+    "name": "Praphull Fighter",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 13,
+    "name": "Rupesh Jha",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 14,
+    "name": "Rakesh Bansal",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 15,
+    "name": "Rajesh Garg",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 16,
+    "name": "Rajiv Kumar",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 17,
+    "name": "Rahul Jain",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 18,
+    "name": "Ravi Shankar",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 19,
+    "name": "Satish Joshi",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 20,
+    "name": "Santosh Shukla",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 21,
+    "name": "Shrawan Shrivastava",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 22,
+    "name": "Sidharth Singh",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 23,
+    "name": "Sumit Maheshwari",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 24,
+    "name": "Tanuj Grover",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 25,
+    "name": "Vijay Chahal",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 26,
+    "name": "Vikas",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 27,
+    "name": "Vivek Mishra",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  },
+  {
+    "id": 28,
+    "name": "Vivek Tripathi",
+    "role": "Player",
+    "isCaptain": false,
+    "isViceCaptain": false,
+    "basePoint": 50
+  }
+]
