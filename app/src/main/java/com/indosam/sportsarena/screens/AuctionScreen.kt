@@ -1,6 +1,5 @@
 package com.indosam.sportsarena.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -36,8 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,79 +41,80 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.indosam.sportsarena.R
+import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.models.Team
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
 
 @Composable
 fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val players by viewModel.players.collectAsState()
-    val teams = listOf(Team("Indosam Warriors"), Team("Indosam Strikers"), Team("Indosam Titans"))
+    val selectedPlayers by viewModel.selectedPlayers.collectAsState()
+    val selectedTeamInfo by viewModel.selectedTeamInfo.collectAsState()
 
-    val selectedTeamInfo = remember { mutableStateOf(mapOf<String, Pair<String, String>>()) }
+    val teams = listOf(Team("Indosam Warriors"), Team("Indosam Strikers"), Team("Indosam Titans"))
 
     LaunchedEffect(Unit) { viewModel.loadPlayers() }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.background1),
-            contentDescription = "Background Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            alpha = 0.5f
-        )
-
+    BaseScreen(
+        title = "Welcome to the Auction",
+        navController = navController,
+        showBackButton = true,
+        showHomeButton = true
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Home Button, Title, and Team List code...
-            // Home Button
-
+            // Add Info Button here
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.Start
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = { navController.navigate("home") }) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.Blue)
+                IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Know Auction Rules",
+                        tint = Color.Blue
+                    )
                 }
             }
 
-            // Title
-
-            Text(
-                text = "Welcome to the Auction",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.border(2.dp, Color.Black).padding(12.dp),
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
             // List of Teams
-
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(teams.size) { index ->
-                    TeamCard(teams[index].name, players.map { it.name }) { captain, viceCaptain ->
-                        selectedTeamInfo.value =
-                            selectedTeamInfo.value +
-                                    (teams[index].name to Pair(captain, viceCaptain))
-                    }
+                    TeamCard(
+                        teamName = teams[index].name,
+                        allPlayers = players.map { it.name },
+                        selectedPlayers = selectedPlayers,
+                        onSelectionChanged = { captain, viceCaptain ->
+                            viewModel.updateSelectedTeamInfo(
+                                teams[index].name,
+                                captain,
+                                viceCaptain
+                            )
+                        },
+                        onPlayerSelected = { player ->
+                            viewModel.addSelectedPlayer(player)
+                        }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Start Auction Button
-            Button(
+            CustomButton(
+                text = "Start Auction",
                 onClick = {
-                    // Serialize the selectedTeamInfo map to JSON
                     val gson = Gson()
-                    val selectedTeamsJson = gson.toJson(selectedTeamInfo.value)
+                    val selectedTeamsJson = gson.toJson(selectedTeamInfo)
 
                     println(
                         "Debug: Serialized JSON being sent to the next screen: $selectedTeamsJson"
@@ -129,16 +126,11 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
                             object : TypeToken<Map<String, Pair<String, String>>>() {}.type
                         )
                     println("Debug: Deserialized map for verification: $deserializedMap")
-
-                    // Navigate to the next screen with all teams' information
                     navController.navigate("auctionFlow/$selectedTeamsJson")
                 },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                shape = MaterialTheme.shapes.medium,
-                enabled = selectedTeamInfo.value.isNotEmpty()
-            ) {
-                Text(text = "Start Auction", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
+                enabled = selectedTeamInfo.size == teams.size &&
+                        selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
+            )
         }
     }
 }
@@ -147,14 +139,15 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
 fun TeamCard(
     teamName: String,
     allPlayers: List<String>,
-    onSelectionChanged: (String, String) -> Unit
+    selectedPlayers: Set<String>,
+    onSelectionChanged: (String, String) -> Unit,
+    onPlayerSelected: (String) -> Unit
 ) {
     var captain by remember { mutableStateOf("") }
     var viceCaptain by remember { mutableStateOf("") }
-    var selectedPlayers = remember { mutableStateOf(mutableSetOf<String>()) }
 
-    // Filter available players (remove selected captain & vice-captain)
-    val availablePlayers = allPlayers.filter { it !in selectedPlayers.value }
+    // Filter available players (remove players already selected in other teams)
+    val availablePlayers = allPlayers.filter { it !in selectedPlayers }
 
     LaunchedEffect(captain, viceCaptain) {
         if (captain.isNotEmpty() && viceCaptain.isNotEmpty() && captain == viceCaptain) {
@@ -165,12 +158,16 @@ fun TeamCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = teamName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -184,10 +181,7 @@ fun TeamCard(
                 options = availablePlayers,
                 onSelectionChange = {
                     captain = it
-                    selectedPlayers.value.add(
-                        it
-                    ) // Mark this player as selected // Ensure vice-captain can be selected again
-                    // if needed
+                    onPlayerSelected(it) // Add selected player to global state
                 }
             )
 
@@ -200,7 +194,7 @@ fun TeamCard(
                 options = availablePlayers,
                 onSelectionChange = {
                     viceCaptain = it
-                    selectedPlayers.value.add(it) // Mark this player as selected
+                    onPlayerSelected(it) // Add selected player to global state
                 }
             )
 
@@ -222,7 +216,8 @@ fun DropdownMenuComponent(
     // Button or Text that triggers the dropdown
     Box(
         modifier =
-        Modifier.fillMaxWidth()
+        Modifier
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
             .clickable { expanded = !expanded } // Toggle dropdown on click

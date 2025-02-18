@@ -1,6 +1,5 @@
 package com.indosam.sportsarena.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,35 +10,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.indosam.sportsarena.R
+import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.models.Player
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
 
@@ -49,7 +41,6 @@ fun AuctionFlowScreen(
     selectedTeamsJson: String,
     viewModel: AuctionViewModel = viewModel()
 ) {
-    // Deserialize the JSON string back into a map
     val gson = Gson()
     val type = object : TypeToken<Map<String, Pair<String, String>>>() {}.type
     val selectedTeamInfo = gson.fromJson<Map<String, Pair<String, String>>>(selectedTeamsJson, type)
@@ -57,203 +48,260 @@ fun AuctionFlowScreen(
     // Extract captain and vice-captain names to exclude them from remaining players
     val excludeNames = selectedTeamInfo.values.flatMap { listOf(it.first, it.second) }
 
-    // State for auction flow
-    val teams = selectedTeamInfo.keys.toList()
-    var currentBid by remember { mutableIntStateOf(0) } // Current bid for the player
-    var currentBidder by remember { mutableStateOf(teams.random()) } // Random starting team
-    var auctionStatus by remember { mutableStateOf("Auction in progress...") }
-    var remainingPlayers by remember { mutableStateOf<List<Player>>(emptyList()) }
-    val teamBudgets by remember { mutableStateOf(teams.associateWith { 1000 }.toMutableMap()) }
-    val teamPlayers by remember {
-        mutableStateOf(teams.associateWith { mutableListOf<Player>() }.toMutableMap())
-    }
-
-    // Observe players from ViewModel
+    // Observe players and auction state from ViewModel
     val playersState = viewModel.players.collectAsState()
+    val auctionState = viewModel.auctionState.collectAsState()
 
     // Load players when the screen is launched
     LaunchedEffect(Unit) {
-        remainingPlayers = playersState.value.filter { it.name !in excludeNames }
+        viewModel.loadPlayers(excludeNames)
     }
 
-    // Update remainingPlayers when playersState changes
-    LaunchedEffect(playersState.value) { remainingPlayers = playersState.value }
-
-    // Function to handle bidding
-    fun handleBid(team: String, bid: Int) {
-        val player = remainingPlayers.firstOrNull()
-        if (player == null) {
-            auctionStatus = "No players remaining!"
-            return
-        }
-        if (bid < player.basePoint) {
-            auctionStatus = "Bid must be at least ${player.basePoint} points!"
-            return
-        }
-        if (bid > teamBudgets[team]!!) {
-            auctionStatus = "$team cannot afford this bid!"
-            return
-        }
-        if (bid < currentBid + 50) {
-            auctionStatus = "Bid must be increased by at least 50 points!"
-            return
-        }
-        currentBid = bid
-        currentBidder = team
-        auctionStatus = "$team bids $bid points for ${player.name}!"
+    // Update UI when playersState changes
+    LaunchedEffect(playersState.value) {
+        viewModel.updateRemainingPlayers(playersState.value)
     }
 
-    // Function to assign a player to the winning team
-    fun assignPlayer() {
-        val player = remainingPlayers.firstOrNull()
-        if (player != null) {
-            teamPlayers[currentBidder]?.add(player)
-            teamBudgets[currentBidder] = teamBudgets[currentBidder]!! - currentBid
-            remainingPlayers = remainingPlayers.drop(1)
-            auctionStatus = "${player.name} assigned to $currentBidder for $currentBid points!"
-            currentBid = 0 // Reset bid for the next player
-            currentBidder =
-                teams[(teams.indexOf(currentBidder) + 1) % teams.size] // Move to the next team
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
-        Image(
-            painter = painterResource(id = R.drawable.background1),
-            contentDescription = "Background Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            alpha = 0.3f
-        )
-
+    BaseScreen(
+        title = "Auction Flow",
+        navController = navController,
+        showBackButton = true,
+        showHomeButton = true
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Home and Back Buttons
+            // Add the "Know Auction Rules" button
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Blue)
-                }
-                IconButton(onClick = { navController.navigate("home") }) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.Blue)
+                IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Know Auction Rules",
+                        tint = Color.Blue
+                    )
                 }
             }
 
-            // Page Title
-            Text(
-                text = "Auction Flow",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.border(2.dp, Color.Black).padding(12.dp),
-                color = Color.Black
+            // Table Layout
+            TeamTable(
+                selectedTeamInfo,
+                auctionState.value.teamPlayers,
+                auctionState.value.teamBudgets
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Teams Information in Tabular Format
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                selectedTeamInfo.entries.forEach { (teamName, captainViceCaptain) ->
-                    val (captain, viceCaptain) = captainViceCaptain
-                    Column(
-                        modifier = Modifier.weight(1f).padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Team Name
-                        Text(
-                            text = teamName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textDecoration = TextDecoration.Underline,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        // Captain and Vice Captain
-                        Text(
-                            text = captain,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        Text(
-                            text = viceCaptain,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        // Players
-                        teamPlayers[teamName]?.forEach { player ->
-                            Text(
-                                text = "${player.name} (${player.basePoint})",
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                        }
-                        repeat(6 - (teamPlayers[teamName]?.size ?: 0)) {
-                            Text(
-                                text = "TBD",
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                        }
-
-                        // Budget
-                        Text(
-                            text = "Budget: ${teamBudgets[teamName]} points",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                }
-            }
+            // Points Table
+            PointsTable(auctionState.value.teamBudgets)
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Auction Controls
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = auctionStatus,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+            AuctionControls(
+                viewModel = viewModel,
+                currentBidder = auctionState.value.currentBidder,
+                remainingPlayers = auctionState.value.remainingPlayers,
+                currentBid = auctionState.value.currentBid,
+                onBid = { bid -> viewModel.handleBid(bid) },
+                onSkip = { viewModel.nextTeam() },
+                onAssign = { viewModel.assignPlayer() },
+                onAssignUnsold = { viewModel.assignUnsoldPlayers() }
+            )
+        }
+    }
+}
 
-                // Bid Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    teams.forEach { team ->
-                        Button(
-                            onClick = { handleBid(team, currentBid + 50) },
-                            enabled = currentBidder == team && remainingPlayers.isNotEmpty()
-                        ) {
-                            Text(text = "$team Bid ${currentBid + 50}")
+@Composable
+fun TeamTable(
+    selectedTeamInfo: Map<String, Pair<String, String>>,
+    teamPlayers: Map<String, List<Player>>,
+    teamBudgets: Map<String, Int>
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.Gray, RoundedCornerShape(1.dp))
+    ) {
+        Column(modifier = Modifier.padding(1.dp)) {
+            val attributes = listOf("Team Name", "Captain", "VC", "P1", "P2", "P3", "P4", "P5", "P6")
+            attributes.forEach { attribute ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = attribute,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Color.Gray)
+                            .padding(1.dp))
+                    selectedTeamInfo.keys.forEach { team ->
+                        val data = when (attribute) {
+                            "Team Name" -> team
+                            "Captain" -> getFirstName(selectedTeamInfo[team]?.first ?: "TBD")
+                            "VC" -> getFirstName(selectedTeamInfo[team]?.second ?: "TBD")
+                            in listOf("P1", "P2", "P3", "P4", "P5", "P6") -> {
+                                val playerIndex = attribute.substring(1).toInt() - 1
+                                teamPlayers[team]?.getOrNull(playerIndex)?.let { getFirstName(it.name) } ?: "TBD"
+                            }
+                            else -> "N/A"
                         }
+                        Text(
+                            text = data,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, Color.Gray)
+                                .padding(1.dp))
                     }
-                }
-
-                // Assign Player Button
-                Button(
-                    onClick = { assignPlayer() },
-                    enabled = remainingPlayers.isNotEmpty(),
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text(text = "Assign Player")
                 }
             }
         }
     }
 }
+
+fun getFirstName(fullName: String): String {
+    return fullName.split(" ").firstOrNull() ?: fullName
+}
+
+
+@Composable
+fun PointsTable(teamBudgets: Map<String, Int>) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.Gray, RoundedCornerShape(1.dp))
+    ) {
+        Column(modifier = Modifier.padding(1.dp)) {
+            val attributes = listOf("Points Utilised", "Points Left", "Total Budget")
+            attributes.forEach { attribute ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = attribute,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Color.Gray)
+                            .padding(1.dp)
+                    )
+                    teamBudgets.keys.forEach { team ->
+                        val data = when (attribute) {
+                            "Points Utilised" -> (1000 - (teamBudgets[team] ?: 1000)).toString()
+                            "Points Left" -> (teamBudgets[team] ?: 1000).toString()
+                            "Total Budget" -> "1000"
+                            else -> "N/A"
+                        }
+                        Text(
+                            text = data,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, Color.Gray)
+                                .padding(1.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AuctionControls(
+    viewModel: AuctionViewModel,
+    currentBidder: String,
+    remainingPlayers: List<Player>,
+    currentBid: Int,
+    onBid: (Int) -> Unit,
+    onSkip: () -> Unit,
+    onAssign: () -> Unit,
+    onAssignUnsold: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        val currentPlayer = remainingPlayers.firstOrNull()
+
+        if (currentPlayer != null) {
+            Text(
+                text = "Current Team Bidding: $currentBidder",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 8.dp))
+            Text(
+                text = "Current Player for Auction: ${getFirstName(currentPlayer.name)} (${currentPlayer.basePoint})",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp))
+            Text(
+                text = "Current Bidding Amount: $currentBid",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                CustomButton(
+                    text = "Place Bid",
+                    onClick = { onBid(currentBid + 50) },
+                    enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(currentBidder, currentBid + 50),
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                CustomButton(
+                    text = "Skip Turn",
+                    onClick = onSkip,
+                    enabled = remainingPlayers.isNotEmpty(),
+                    modifier = Modifier.weight(1f)
+                )
+
+                CustomButton(
+                    text = "Assign Player",
+                    onClick = onAssign,
+                    enabled = remainingPlayers.isNotEmpty(),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        } else {
+            Text(
+                text = "No players remaining for auction!",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp)
+            )
+        }
+
+        CustomButton(
+            text = "Assign Unsold Players",
+            onClick = onAssignUnsold,
+            enabled = remainingPlayers.isNotEmpty(),
+        )
+    }
+}
+
+data class AuctionState(
+    val teams: List<String> = listOf("Indosam Titans", "Indosam Warriors", "Indosam Strikers"),
+    val currentBidder: String = teams.random(),
+    val currentBid: Int = 0,
+    val remainingPlayers: List<Player> = emptyList(),
+    val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
+    val teamBudgets: Map<String, Int> = teams.associateWith { 1000 }
+)

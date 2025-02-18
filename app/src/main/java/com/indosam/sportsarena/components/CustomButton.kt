@@ -1,0 +1,45 @@
+package com.indosam.sportsarena.components
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun CustomButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(64.dp),
+    shape: Shape = CircleShape,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    textColor: Color = Color.White,
+    fontSize: Int = 20,
+    enabled: Boolean = true
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        enabled = enabled
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = fontSize.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+

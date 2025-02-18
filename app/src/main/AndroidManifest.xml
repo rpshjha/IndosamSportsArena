@@ -6,16 +6,17 @@
         android:label="Indosam Sports Arena"
         android:exported="true">
 
-        <!-- Set MainActivity without Splash Theme -->
+<!--         Set MainActivity without Splash Theme -->
         <activity
             android:name=".activities.MainActivity"
-            android:theme="@style/Theme.IndosamSportsArena"
+            android:theme="@style/Theme.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
 
     </application>
 </manifest>
