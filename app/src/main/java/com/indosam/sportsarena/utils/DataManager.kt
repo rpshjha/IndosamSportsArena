@@ -6,7 +6,7 @@ import org.json.JSONArray
 import java.io.IOException
 
 object DataManager {
-    val playerPool = mutableListOf<Player>()
+    private val playerPool = mutableListOf<Player>()
 
     fun loadPlayers(context: Context) {
         try {
@@ -15,13 +15,18 @@ object DataManager {
 
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
+
                 val player = Player(
                     id = obj.getInt("id"),
                     name = obj.getString("name"),
-                    role = obj.getString("role"),
+                    dob = obj.getString("dob"),
+                    battingStyle = obj.getString("battingStyle"),
+                    bowlingStyle = obj.getString("bowlingStyle"),
                     isCaptain = obj.getBoolean("isCaptain"),
-                    isViceCaptain = obj.getBoolean("isViceCaptain")
+                    isViceCaptain = obj.getBoolean("isViceCaptain"),
+                    basePoint = obj.getInt("basePoint")
                 )
+
                 playerPool.add(player)
             }
         } catch (e: IOException) {

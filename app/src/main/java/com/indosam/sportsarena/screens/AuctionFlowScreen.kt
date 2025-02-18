@@ -51,6 +51,7 @@ fun AuctionFlowScreen(
     // Observe players and auction state from ViewModel
     val playersState = viewModel.players.collectAsState()
     val auctionState = viewModel.auctionState.collectAsState()
+    val toastMessage = viewModel.toastMessage.collectAsState()
 
     // Load players when the screen is launched
     LaunchedEffect(Unit) {
@@ -60,6 +61,16 @@ fun AuctionFlowScreen(
     // Update UI when playersState changes
     LaunchedEffect(playersState.value) {
         viewModel.updateRemainingPlayers(playersState.value)
+    }
+
+    // Show toast message if any
+    LaunchedEffect(toastMessage.value) {
+        toastMessage.value?.let {
+            // Show toast message here
+            // You can use a Toast or a Snackbar depending on your UI framework
+            // For example, if using Snackbar:
+            // scaffoldState.snackbarHostState.showSnackbar(it)
+        }
     }
 
     BaseScreen(
@@ -112,7 +123,7 @@ fun AuctionFlowScreen(
                 remainingPlayers = auctionState.value.remainingPlayers,
                 currentBid = auctionState.value.currentBid,
                 onBid = { bid -> viewModel.handleBid(bid) },
-                onSkip = { viewModel.nextTeam() },
+                onSkip = { viewModel.skipTurn() },
                 onAssign = { viewModel.assignPlayer() },
                 onAssignUnsold = { viewModel.assignUnsoldPlayers() }
             )
@@ -132,7 +143,8 @@ fun TeamTable(
             .border(1.dp, Color.Gray, RoundedCornerShape(1.dp))
     ) {
         Column(modifier = Modifier.padding(1.dp)) {
-            val attributes = listOf("Team Name", "Captain", "VC", "P1", "P2", "P3", "P4", "P5", "P6")
+            val attributes =
+                listOf("Team Name", "Captain", "VC", "P1", "P2", "P3", "P4", "P5", "P6")
             attributes.forEach { attribute ->
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -141,7 +153,8 @@ fun TeamTable(
                         modifier = Modifier
                             .weight(1f)
                             .border(1.dp, Color.Gray)
-                            .padding(1.dp))
+                            .padding(1.dp)
+                    )
                     selectedTeamInfo.keys.forEach { team ->
                         val data = when (attribute) {
                             "Team Name" -> team
@@ -149,8 +162,10 @@ fun TeamTable(
                             "VC" -> getFirstName(selectedTeamInfo[team]?.second ?: "TBD")
                             in listOf("P1", "P2", "P3", "P4", "P5", "P6") -> {
                                 val playerIndex = attribute.substring(1).toInt() - 1
-                                teamPlayers[team]?.getOrNull(playerIndex)?.let { getFirstName(it.name) } ?: "TBD"
+                                teamPlayers[team]?.getOrNull(playerIndex)
+                                    ?.let { getFirstName(it.name) } ?: "TBD"
                             }
+
                             else -> "N/A"
                         }
                         Text(
@@ -159,7 +174,8 @@ fun TeamTable(
                             modifier = Modifier
                                 .weight(1f)
                                 .border(1.dp, Color.Gray)
-                                .padding(1.dp))
+                                .padding(1.dp)
+                        )
                     }
                 }
             }
@@ -170,7 +186,6 @@ fun TeamTable(
 fun getFirstName(fullName: String): String {
     return fullName.split(" ").firstOrNull() ?: fullName
 }
-
 
 @Composable
 fun PointsTable(teamBudgets: Map<String, Int>) {
@@ -232,24 +247,31 @@ fun AuctionControls(
         val currentPlayer = remainingPlayers.firstOrNull()
 
         if (currentPlayer != null) {
+            // Set the initial bid to the player's base point
+            val initialBid = currentPlayer.basePoint
+            val currentBidAmount = if (currentBid < initialBid) initialBid else currentBid
+
             Text(
                 text = "Current Team Bidding: $currentBidder",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 8.dp))
+                    .padding(bottom = 8.dp)
+            )
             Text(
                 text = "Current Player for Auction: ${getFirstName(currentPlayer.name)} (${currentPlayer.basePoint})",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 16.dp))
+                    .padding(bottom = 16.dp)
+            )
             Text(
-                text = "Current Bidding Amount: $currentBid",
+                text = "Current Bidding Amount: $currentBidAmount",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 16.dp))
+                    .padding(bottom = 16.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -257,8 +279,11 @@ fun AuctionControls(
             ) {
                 CustomButton(
                     text = "Place Bid",
-                    onClick = { onBid(currentBid + 50) },
-                    enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(currentBidder, currentBid + 50),
+                    onClick = { onBid(currentBidAmount + 50) }, // Increment by 50
+                    enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(
+                        currentBidder,
+                        currentBidAmount + 50
+                    ),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -270,15 +295,15 @@ fun AuctionControls(
                     enabled = remainingPlayers.isNotEmpty(),
                     modifier = Modifier.weight(1f)
                 )
-
-                CustomButton(
-                    text = "Assign Player",
-                    onClick = onAssign,
-                    enabled = remainingPlayers.isNotEmpty(),
-                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            CustomButton(
+                text = "Assign Player",
+                onClick = onAssign,
+                enabled = remainingPlayers.isNotEmpty(),
+            )
         } else {
             Text(
                 text = "No players remaining for auction!",
@@ -296,12 +321,3 @@ fun AuctionControls(
         )
     }
 }
-
-data class AuctionState(
-    val teams: List<String> = listOf("Indosam Titans", "Indosam Warriors", "Indosam Strikers"),
-    val currentBidder: String = teams.random(),
-    val currentBid: Int = 0,
-    val remainingPlayers: List<Player> = emptyList(),
-    val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
-    val teamBudgets: Map<String, Int> = teams.associateWith { 1000 }
-)
