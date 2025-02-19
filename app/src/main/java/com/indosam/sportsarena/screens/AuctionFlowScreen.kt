@@ -25,6 +25,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,6 +54,7 @@ fun AuctionFlowScreen(
     // Observe players and auction state from ViewModel
     val playersState = viewModel.players.collectAsState()
     val auctionState = viewModel.auctionState.collectAsState()
+    val unsoldPlayersState = viewModel.unsoldPlayers.collectAsState()
     val toastMessage = viewModel.toastMessage.collectAsState()
 
     // Load players when the screen is launched
@@ -127,9 +131,24 @@ fun AuctionFlowScreen(
                 onAssign = { viewModel.assignPlayer() },
                 onAssignUnsold = { viewModel.assignUnsoldPlayers() }
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Display Unsold Players
+            if (unsoldPlayersState.value.isNotEmpty()) {
+                Text(
+                    text = "Unsold Players",
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 8.dp)
+                )
+                UnsoldPlayersList(unsoldPlayersState.value, viewModel = viewModel())
+            }
         }
     }
 }
+
 
 @Composable
 fun TeamTable(
@@ -239,6 +258,8 @@ fun AuctionControls(
     onAssign: () -> Unit,
     onAssignUnsold: () -> Unit
 ) {
+    val auctionState = viewModel.auctionState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -247,44 +268,59 @@ fun AuctionControls(
         val currentPlayer = remainingPlayers.firstOrNull()
 
         if (currentPlayer != null) {
-            // Set the initial bid to the player's base point
+
             val initialBid = currentPlayer.basePoint
             val currentBidAmount = if (currentBid < initialBid) initialBid else currentBid
 
+            // Display current player and bidding information
             Text(
-                text = "Current Team Bidding: $currentBidder",
+                text = "Auction Round ${auctionState.value.currentRound}",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 16.dp),
+                style = TextStyle(
+                    textDecoration = TextDecoration.Underline,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
             )
             Text(
-                text = "Current Player for Auction: ${getFirstName(currentPlayer.name)} (${currentPlayer.basePoint})",
+                text = "Bidding Team: $currentBidder",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
             )
             Text(
-                text = "Current Bidding Amount: $currentBidAmount",
+                text = "Bidding Player: ${getFirstName(currentPlayer.name)} (${currentPlayer.basePoint})",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp)
+            )
+            Text(
+                text = "Bidding Amount: $currentBidAmount",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
             )
 
+            // Bid and Skip buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 CustomButton(
                     text = "Place Bid",
-                    onClick = { onBid(currentBidAmount + 50) }, // Increment by 50
+                    onClick = { onBid(currentBidAmount + 50) },
                     enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(
                         currentBidder,
                         currentBidAmount + 50
                     ),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = Color.Green
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -293,17 +329,19 @@ fun AuctionControls(
                     text = "Skip Turn",
                     onClick = onSkip,
                     enabled = remainingPlayers.isNotEmpty(),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = Color.Red
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                CustomButton(
+                    text = "Assign",
+                    onClick = onAssign,
+                    enabled = remainingPlayers.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            CustomButton(
-                text = "Assign Player",
-                onClick = onAssign,
-                enabled = remainingPlayers.isNotEmpty(),
-            )
         } else {
             Text(
                 text = "No players remaining for auction!",
@@ -313,11 +351,31 @@ fun AuctionControls(
                     .padding(bottom = 16.dp)
             )
         }
+    }
+}
+
+@Composable
+fun UnsoldPlayersList(unsoldPlayers: List<Player>, viewModel: AuctionViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        unsoldPlayers.forEach { player ->
+            Text(
+                text = "${getFirstName(player.name)} (${player.basePoint})",
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+            )
+        }
 
         CustomButton(
             text = "Assign Unsold Players",
-            onClick = onAssignUnsold,
-            enabled = remainingPlayers.isNotEmpty(),
+            onClick = {
+                viewModel.assignUnsoldPlayers()
+            },
+            enabled = unsoldPlayers.isNotEmpty(),
         )
     }
 }

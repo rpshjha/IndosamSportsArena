@@ -40,18 +40,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.models.Team
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
+
+
+private val teams = listOf(
+    Team("Indosam Warriors"),
+    Team("Indosam Strikers"),
+    Team("Indosam Titans")
+)
 
 @Composable
 fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val players by viewModel.players.collectAsState()
     val selectedPlayers by viewModel.selectedPlayers.collectAsState()
     val selectedTeamInfo by viewModel.selectedTeamInfo.collectAsState()
-
-    val teams = listOf(Team("Indosam Warriors"), Team("Indosam Strikers"), Team("Indosam Titans"))
 
     LaunchedEffect(Unit) { viewModel.loadPlayers() }
 
@@ -67,77 +71,53 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Add Info Button here
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Know Auction Rules",
-                        tint = Color.Blue
-                    )
-                }
-            }
+            AuctionInfoButton(navController)
 
-            // List of Teams
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(teams.size) { index ->
                     TeamCard(
-                        teamName = teams[index].name,
+                        team = teams[index],
                         allPlayers = players.map { it.name },
                         selectedPlayers = selectedPlayers,
                         onSelectionChanged = { captain, viceCaptain ->
-                            viewModel.updateSelectedTeamInfo(
-                                teams[index].name,
-                                captain,
-                                viceCaptain
-                            )
+                            viewModel.updateSelectedTeamInfo(teams[index].name, captain, viceCaptain)
                         },
-                        onPlayerSelected = { player ->
-                            viewModel.addSelectedPlayer(player)
-                        }
+                        onPlayerSelected = viewModel::addSelectedPlayer
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Start Auction Button
             CustomButton(
                 text = "Start Auction",
-                onClick = {
-                    val gson = Gson()
-                    val selectedTeamsJson = gson.toJson(selectedTeamInfo)
-
-                    println(
-                        "Debug: Serialized JSON being sent to the next screen: $selectedTeamsJson"
-                    )
-
-                    val deserializedMap =
-                        gson.fromJson<Map<String, Pair<String, String>>>(
-                            selectedTeamsJson,
-                            object : TypeToken<Map<String, Pair<String, String>>>() {}.type
-                        )
-                    println("Debug: Deserialized map for verification: $deserializedMap")
-                    navController.navigate("auctionFlow/$selectedTeamsJson")
-                },
-                enabled = selectedTeamInfo.size == teams.size &&
-                        selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
+                onClick = { navigateToAuctionFlow(navController, selectedTeamInfo) },
+                enabled = isAuctionReady(selectedTeamInfo)
             )
         }
     }
 }
 
 @Composable
+fun AuctionInfoButton(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
+            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color.Blue)
+        }
+    }
+}
+
+@Composable
 fun TeamCard(
-    teamName: String,
+    team: Team,
     allPlayers: List<String>,
     selectedPlayers: Set<String>,
     onSelectionChanged: (String, String) -> Unit,
@@ -146,12 +126,12 @@ fun TeamCard(
     var captain by remember { mutableStateOf("") }
     var viceCaptain by remember { mutableStateOf("") }
 
-    // Filter available players (remove players already selected in other teams)
-    val availablePlayers = allPlayers.filter { it !in selectedPlayers }
+    val availablePlayers by remember(selectedPlayers, allPlayers) {
+        mutableStateOf(allPlayers.filterNot { it in selectedPlayers })
+    }
 
     LaunchedEffect(captain, viceCaptain) {
         if (captain.isNotEmpty() && viceCaptain.isNotEmpty() && captain == viceCaptain) {
-            // Reset vice-captain if it matches the captain
             viceCaptain = ""
         }
         onSelectionChanged(captain, viceCaptain)
@@ -170,35 +150,20 @@ fun TeamCard(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = teamName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-
+            Text(text = team.name, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Select Captain Dropdown
-            DropdownMenuComponent(
-                label = "Select Captain",
-                selectedValue = captain,
-                options = availablePlayers,
-                onSelectionChange = {
-                    captain = it
-                    onPlayerSelected(it) // Add selected player to global state
-                }
-            )
-
+            DropdownMenuComponent("Select Captain", captain, availablePlayers) {
+                captain = it
+                onPlayerSelected(it)
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Select Vice-Captain Dropdown
-            DropdownMenuComponent(
-                label = "Select Vice-Captain",
-                selectedValue = viceCaptain,
-                options = availablePlayers,
-                onSelectionChange = {
-                    viceCaptain = it
-                    onPlayerSelected(it) // Add selected player to global state
-                }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp)) // Prevents overlap
+            DropdownMenuComponent("Select Vice-Captain", viceCaptain, availablePlayers) {
+                viceCaptain = it
+                onPlayerSelected(it)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -211,40 +176,46 @@ fun DropdownMenuComponent(
     onSelectionChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf(selectedValue) }
 
-    // Button or Text that triggers the dropdown
     Box(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-            .clickable { expanded = !expanded } // Toggle dropdown on click
+            .clickable { expanded = !expanded }
             .padding(16.dp)
     ) {
         Text(
-            text = selectedText.ifEmpty { label },
+            text = selectedValue.ifEmpty { label },
             style = MaterialTheme.typography.bodyMedium,
-            color =
-            if (selectedText.isNotEmpty()) MaterialTheme.colorScheme.onSurface else Color.Gray
+            color = if (selectedValue.isNotEmpty()) MaterialTheme.colorScheme.onSurface else Color.Gray
         )
     }
 
-    // The actual dropdown menu
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = { expanded = false } // Dismiss the menu when clicked outside
+        onDismissRequest = { expanded = false }
     ) {
         options.forEach { option ->
             DropdownMenuItem(
                 text = { Text(option) },
                 onClick = {
-                    selectedText = option
                     onSelectionChange(option)
-                    expanded = false // Close the menu after selection
+                    expanded = false
                 }
             )
         }
     }
+}
+
+
+private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>): Boolean {
+    return selectedTeamInfo.size == teams.size &&
+            selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
+}
+
+
+private fun navigateToAuctionFlow(navController: NavController, selectedTeamInfo: Map<String, Pair<String, String>>) {
+    val selectedTeamsJson = Gson().toJson(selectedTeamInfo)
+    navController.navigate("auctionFlow/$selectedTeamsJson")
 }

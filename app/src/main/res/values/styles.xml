@@ -1,1 +1,7 @@
-<resources></resources>
+<resources>
+
+    <style name="ShapeAppearance.RoundedCorners" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+</resources>

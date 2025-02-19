@@ -13,16 +13,16 @@ import com.indosam.sportsarena.screens.HomeScreen
 import com.indosam.sportsarena.screens.KnowAuctionRulesScreen
 import com.indosam.sportsarena.screens.ScheduleScreen
 import com.indosam.sportsarena.screens.TeamsScreen
-import com.indosam.sportsarena.ui.theme.IndosamSportsArenaTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         installSplashScreen()
 
         setContent {
-            IndosamSportsArenaTheme {
+
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") { HomeScreen(navController) }
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     composable("teams") { TeamsScreen(navController) }
                     composable("schedule") { ScheduleScreen(navController) }
                 }
-            }
+
         }
     }
 }
