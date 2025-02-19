@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,11 +52,21 @@ private val teams = listOf(
     Team("Indosam Titans")
 )
 
+
 @Composable
 fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val players by viewModel.players.collectAsState()
     val selectedPlayers by viewModel.selectedPlayers.collectAsState()
     val selectedTeamInfo by viewModel.selectedTeamInfo.collectAsState()
+
+    // State to manage captain and vice-captain selections for each team
+    val teamSelections = remember {
+        mutableStateMapOf<String, Pair<String, String>>().apply {
+            teams.forEach { team ->
+                this[team.name] = Pair("", "") // Initialize with empty selections
+            }
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.loadPlayers() }
 
@@ -82,7 +93,10 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
                         team = teams[index],
                         allPlayers = players.map { it.name },
                         selectedPlayers = selectedPlayers,
+                        captain = teamSelections[teams[index].name]?.first ?: "",
+                        viceCaptain = teamSelections[teams[index].name]?.second ?: "",
                         onSelectionChanged = { captain, viceCaptain ->
+                            teamSelections[teams[index].name] = Pair(captain, viceCaptain)
                             viewModel.updateSelectedTeamInfo(teams[index].name, captain, viceCaptain)
                         },
                         onPlayerSelected = viewModel::addSelectedPlayer
@@ -102,39 +116,17 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
 }
 
 @Composable
-fun AuctionInfoButton(navController: NavController) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        horizontalArrangement = Arrangement.End
-    ) {
-        IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color(0xFFBB86FC))
-        }
-    }
-}
-
-@Composable
 fun TeamCard(
     team: Team,
     allPlayers: List<String>,
     selectedPlayers: Set<String>,
+    captain: String,
+    viceCaptain: String,
     onSelectionChanged: (String, String) -> Unit,
     onPlayerSelected: (String) -> Unit
 ) {
-    var captain by remember { mutableStateOf("") }
-    var viceCaptain by remember { mutableStateOf("") }
-
     val availablePlayers by remember(selectedPlayers, allPlayers) {
         mutableStateOf(allPlayers.filterNot { it in selectedPlayers })
-    }
-
-    LaunchedEffect(captain, viceCaptain) {
-        if (captain.isNotEmpty() && viceCaptain.isNotEmpty() && captain == viceCaptain) {
-            viceCaptain = ""
-        }
-        onSelectionChanged(captain, viceCaptain)
     }
 
     Card(
@@ -153,15 +145,15 @@ fun TeamCard(
             Text(text = team.name, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(12.dp))
 
-            DropdownMenuComponent("Select Captain", captain, availablePlayers) {
-                captain = it
-                onPlayerSelected(it)
+            DropdownMenuComponent("Select Captain", captain, availablePlayers) { newCaptain ->
+                onSelectionChanged(newCaptain, viceCaptain)
+                onPlayerSelected(newCaptain)
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            DropdownMenuComponent("Select Vice-Captain", viceCaptain, availablePlayers) {
-                viceCaptain = it
-                onPlayerSelected(it)
+            DropdownMenuComponent("Select Vice-Captain", viceCaptain, availablePlayers) { newViceCaptain ->
+                onSelectionChanged(captain, newViceCaptain)
+                onPlayerSelected(newViceCaptain)
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -208,6 +200,19 @@ fun DropdownMenuComponent(
     }
 }
 
+@Composable
+fun AuctionInfoButton(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
+            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color(0xFFBB86FC))
+        }
+    }
+}
 
 private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>): Boolean {
     return selectedTeamInfo.size == teams.size &&

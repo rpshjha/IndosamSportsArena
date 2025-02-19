@@ -101,7 +101,7 @@ fun AuctionFlowScreen(
                     Icon(
                         Icons.Default.Info,
                         contentDescription = "Know Auction Rules",
-                        tint = Color.Blue
+                        tint = Color(0xFFBB86FC)
                     )
                 }
             }
