@@ -96,7 +96,7 @@ fun HomeScreen(navController: NavController) {
                     .padding(horizontal = 12.dp, vertical = 16.dp),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.3f)),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
             ) {
                 Column(
                     modifier = Modifier

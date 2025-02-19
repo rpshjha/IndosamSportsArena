@@ -52,12 +52,13 @@ fun TeamsScreen(navController: NavController, viewModel: AuctionViewModel = view
         if (players.isEmpty()) {
             EmptyStateMessage()
         } else {
-            PlayerDisplay(players, currentPlayerIndex, onNext = {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.size
-            }, onPrevious = {
-                currentPlayerIndex =
-                    (currentPlayerIndex - 1 + players.size) % players.size // Handle negative indices
-            })
+            PlayerDisplay(
+                player = players[currentPlayerIndex],
+                onNext = { currentPlayerIndex = (currentPlayerIndex + 1) % players.size },
+                onPrevious = {
+                    currentPlayerIndex = (currentPlayerIndex - 1 + players.size) % players.size
+                }
+            )
         }
     }
 }
@@ -85,15 +86,8 @@ fun EmptyStateMessage() {
 
 
 @Composable
-fun PlayerDisplay(
-    players: List<Player>,
-    currentPlayerIndex: Int,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit
-) {
-    val player = players[currentPlayerIndex]
+fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
     val age = remember(player.dob) { DateUtils.calculateAge(player.dob) }
-
 
     Row(
         modifier = Modifier
@@ -102,63 +96,62 @@ fun PlayerDisplay(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
-        IconButton(
+        NavigationButton(
             onClick = onPrevious,
-            modifier = Modifier.size(48.dp) // Adjust size as needed
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.icons_back),
-                contentDescription = "Previous Player",
-                tint = Color.Black
-            )
-        }
+            iconResId = R.drawable.icons_back,
+            contentDescription = "Previous Player"
+        )
 
-        // Player Card (Centered Column)
         Column(
-            modifier = Modifier.weight(1f), // Take remaining space
+            modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
             PlayerIcon(player, Modifier.size(200.dp))
-
             Spacer(modifier = Modifier.height(16.dp))
-
-
-            Text(
-                text = player.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
+            PlayerName(player.name)
             Spacer(modifier = Modifier.height(8.dp))
-
-            PlayerDetailRow("Age", "$age yrs")
-            PlayerDetailRow("Batting", "${player.battingStyle}")
-            PlayerDetailRow("Bowling", "${player.bowlingStyle}")
+            PlayerDetail("Age", "$age yrs")
+            PlayerDetail("Batting", player.battingStyle)
+            PlayerDetail("Bowling", player.bowlingStyle)
         }
 
-
-        IconButton(
+        NavigationButton(
             onClick = onNext,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.icons_forward),
-                contentDescription = "Next Player",
-                tint = Color.Black
-            )
-        }
-
+            iconResId = R.drawable.icons_forward,
+            contentDescription = "Next Player"
+        )
     }
 }
 
 @Composable
-fun PlayerDetailRow(label: String, value: String) {
+fun NavigationButton(onClick: () -> Unit, iconResId: Int, contentDescription: String) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = iconResId),
+            contentDescription = contentDescription,
+            tint = Color.Black
+        )
+    }
+}
+
+@Composable
+fun PlayerName(name: String) {
+    Text(
+        text = name,
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun PlayerDetail(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
@@ -166,7 +159,8 @@ fun PlayerDetailRow(label: String, value: String) {
         Text(
             text = label,
             color = Color.LightGray,
-            fontStyle = FontStyle.Italic)
+            fontStyle = FontStyle.Italic
+        )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
@@ -176,7 +170,6 @@ fun PlayerDetailRow(label: String, value: String) {
         )
     }
 }
-
 
 @Composable
 fun PlayerIcon(player: Player, modifier: Modifier = Modifier) {
