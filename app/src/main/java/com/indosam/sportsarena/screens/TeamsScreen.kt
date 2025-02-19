@@ -1,6 +1,5 @@
 package com.indosam.sportsarena.screens
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,25 +10,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,6 +42,7 @@ import com.indosam.sportsarena.viewmodels.AuctionViewModel
 @Composable
 fun TeamsScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val players by viewModel.players.collectAsState()
+    var currentPlayerIndex by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(true) {
         viewModel.loadPlayers()
@@ -51,7 +52,12 @@ fun TeamsScreen(navController: NavController, viewModel: AuctionViewModel = view
         if (players.isEmpty()) {
             EmptyStateMessage()
         } else {
-            PlayerList(players)
+            PlayerDisplay(players, currentPlayerIndex, onNext = {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.size
+            }, onPrevious = {
+                currentPlayerIndex =
+                    (currentPlayerIndex - 1 + players.size) % players.size // Handle negative indices
+            })
         }
     }
 }
@@ -77,73 +83,103 @@ fun EmptyStateMessage() {
     }
 }
 
-@Composable
-fun PlayerList(players: List<Player>) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-    ) {
-        items(players, key = { it.id }) { player ->
-            PlayerCard(player)
-        }
-    }
-}
 
 @Composable
-fun PlayerCard(player: Player) {
+fun PlayerDisplay(
+    players: List<Player>,
+    currentPlayerIndex: Int,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit
+) {
+    val player = players[currentPlayerIndex]
     val age = remember(player.dob) { DateUtils.calculateAge(player.dob) }
 
-    Card(
+
+    Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+
+        IconButton(
+            onClick = onPrevious,
+            modifier = Modifier.size(48.dp) // Adjust size as needed
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.icons_back),
+                contentDescription = "Previous Player",
+                tint = Color.Black
+            )
+        }
+
+        // Player Card (Centered Column)
+        Column(
+            modifier = Modifier.weight(1f), // Take remaining space
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
 
-            // Player Icon
-            PlayerIcon(player)
+            PlayerIcon(player, Modifier.size(200.dp))
 
-            // Player details
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 16.dp)
-            ) {
-                Text(
-                    text = player.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Age: $age",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Batting Style: ${player.battingStyle}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Bowling Style: ${player.bowlingStyle}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-            }
+
+            Text(
+                text = player.name,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlayerDetailRow("Age", "$age yrs")
+            PlayerDetailRow("Batting", "${player.battingStyle}")
+            PlayerDetailRow("Bowling", "${player.bowlingStyle}")
         }
+
+
+        IconButton(
+            onClick = onNext,
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.icons_forward),
+                contentDescription = "Next Player",
+                tint = Color.Black
+            )
+        }
+
+    }
+}
+
+@Composable
+fun PlayerDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.LightGray,
+            fontStyle = FontStyle.Italic)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = value,
+            color = Color.LightGray,
+            fontStyle = FontStyle.Italic,
+            textAlign = TextAlign.Start
+        )
     }
 }
 
 
 @Composable
-fun PlayerIcon(player: Player) {
+fun PlayerIcon(player: Player, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val iconResId = remember(player.icon) {
@@ -158,19 +194,14 @@ fun PlayerIcon(player: Player) {
         Image(
             painter = painterResource(id = iconResId),
             contentDescription = "Player Icon",
-            modifier = Modifier
-                .size(40.dp)
-                .padding(end = 16.dp)
+            modifier = modifier
         )
     } else {
         Icon(
-            imageVector = Icons.Default.Person,
+            painter = painterResource(id = R.drawable.boy),
             contentDescription = "Default Player Icon",
-            modifier = Modifier
-                .size(40.dp)
-                .padding(end = 16.dp),
+            modifier = modifier,
             tint = Color.Gray
         )
     }
 }
-
