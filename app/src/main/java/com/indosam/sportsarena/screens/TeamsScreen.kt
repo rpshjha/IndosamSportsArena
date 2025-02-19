@@ -1,19 +1,40 @@
 package com.indosam.sportsarena.screens
 
-import androidx.compose.foundation.layout.*
+import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.indosam.sportsarena.R
 import com.indosam.sportsarena.models.Player
 import com.indosam.sportsarena.utils.DateUtils
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
@@ -84,14 +105,8 @@ fun PlayerCard(player: Player) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Player Icon",
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(end = 16.dp),
-                tint = Color.Gray
-            )
+            // Player Icon
+            PlayerIcon(player)
 
             // Player details
             Column(
@@ -123,6 +138,39 @@ fun PlayerCard(player: Player) {
                 )
             }
         }
+    }
+}
+
+
+@Composable
+fun PlayerIcon(player: Player) {
+    val context = LocalContext.current
+
+    val iconResId = remember(player.icon) {
+        if (player.icon != null) {
+            context.resources.getIdentifier(player.icon, "drawable", context.packageName)
+        } else {
+            0
+        }
+    }
+
+    if (iconResId != 0) {
+        Image(
+            painter = painterResource(id = iconResId),
+            contentDescription = "Player Icon",
+            modifier = Modifier
+                .size(40.dp)
+                .padding(end = 16.dp)
+        )
+    } else {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Default Player Icon",
+            modifier = Modifier
+                .size(40.dp)
+                .padding(end = 16.dp),
+            tint = Color.Gray
+        )
     }
 }
 

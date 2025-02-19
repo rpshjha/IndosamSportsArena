@@ -3,7 +3,7 @@
     <application
         android:allowBackup="true"
         android:theme="@style/Theme.IndosamSportsArena"
-        android:label="Indosam Sports Arena"
+        android:label="Indosam Cricket Club"
         android:exported="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">

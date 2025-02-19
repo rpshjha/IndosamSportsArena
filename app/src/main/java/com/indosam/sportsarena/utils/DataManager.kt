@@ -24,7 +24,8 @@ object DataManager {
                     bowlingStyle = obj.getString("bowlingStyle"),
                     isCaptain = obj.getBoolean("isCaptain"),
                     isViceCaptain = obj.getBoolean("isViceCaptain"),
-                    basePoint = obj.getInt("basePoint")
+                    basePoint = obj.getInt("basePoint"),
+                    icon = obj.getString("icon")
                 )
 
                 playerPool.add(player)

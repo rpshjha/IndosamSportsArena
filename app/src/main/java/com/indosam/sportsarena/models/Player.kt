@@ -10,5 +10,6 @@ data class Player(
     val bowlingStyle: String,
     var isCaptain: Boolean = false,
     var isViceCaptain: Boolean = false,
-    var basePoint: Int
+    var basePoint: Int,
+    val icon: String?
 )

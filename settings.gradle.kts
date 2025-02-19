@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Indosam Sports Arena"
+rootProject.name = "Indosam Cricket Club"
 include(":app")
