@@ -134,16 +134,49 @@ fun AuctionFlowScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Display Unsold Players
-            if (unsoldPlayersState.value.isNotEmpty()) {
-                Text(
-                    text = "Unsold Players",
-                    fontSize = 20.sp,
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .padding(bottom = 8.dp)
-                )
-                UnsoldPlayersList(unsoldPlayersState.value, viewModel = viewModel())
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        if (auctionState.value.remainingPlayers.isNotEmpty()) {
+                            Text(
+                                text = "Remaining Players",
+                                fontSize = 18.sp,
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp),
+                                style = TextStyle(
+                                    textDecoration = TextDecoration.Underline,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            )
+                            RemainingPlayersList(auctionState.value.remainingPlayers)
+                        }
+                    }
+
+                    Column(Modifier.weight(1f)) {
+                        if (unsoldPlayersState.value.isNotEmpty()) {
+                            Text(
+                                text = "Unsold Players",
+                                fontSize = 18.sp,
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp),
+                                style = TextStyle(
+                                    textDecoration = TextDecoration.Underline,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            )
+                            UnsoldPlayersList(unsoldPlayersState.value)
+                        }
+                    }
+                }
             }
         }
     }
@@ -307,40 +340,55 @@ fun AuctionControls(
                     .padding(bottom = 16.dp)
             )
 
-            // Bid and Skip buttons
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                verticalArrangement = Arrangement.Center
             ) {
-                CustomButton(
-                    text = "Place Bid",
-                    onClick = { onBid(currentBidAmount + 50) },
-                    enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(
-                        currentBidder,
-                        currentBidAmount + 50
-                    ),
-                    modifier = Modifier.weight(1f),
-                    backgroundColor = Color.Green
-                )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                // Bid and Skip buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    CustomButton(
+                        text = "Place Bid",
+                        onClick = { onBid(currentBidAmount + 50) },
+                        enabled = remainingPlayers.isNotEmpty() && viewModel.canPlaceBid(
+                            currentBidder,
+                            currentBidAmount + 50
+                        ),
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = Color.Green
+                    )
 
-                CustomButton(
-                    text = "Skip Turn",
-                    onClick = onSkip,
-                    enabled = remainingPlayers.isNotEmpty(),
-                    modifier = Modifier.weight(1f),
-                    backgroundColor = Color.Red
-                )
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    CustomButton(
+                        text = "Skip Turn",
+                        onClick = onSkip,
+                        enabled = remainingPlayers.isNotEmpty(),
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = Color.Red
+                    )
+                }
 
-                CustomButton(
-                    text = "Assign",
-                    onClick = onAssign,
-                    enabled = remainingPlayers.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Assign button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    CustomButton(
+                        text = "Assign Player",
+                        onClick = onAssign,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CustomButton(
+                        text = "Assign Unsold",
+                        onClick = onAssignUnsold,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         } else {
             Text(
@@ -355,7 +403,7 @@ fun AuctionControls(
 }
 
 @Composable
-fun UnsoldPlayersList(unsoldPlayers: List<Player>, viewModel: AuctionViewModel) {
+fun UnsoldPlayersList(unsoldPlayers: List<Player>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -369,13 +417,23 @@ fun UnsoldPlayersList(unsoldPlayers: List<Player>, viewModel: AuctionViewModel) 
                     .padding(vertical = 4.dp)
             )
         }
+    }
+}
 
-        CustomButton(
-            text = "Assign Unsold Players",
-            onClick = {
-                viewModel.assignUnsoldPlayers()
-            },
-            enabled = unsoldPlayers.isNotEmpty(),
-        )
+@Composable
+fun RemainingPlayersList(remainingPlayers: List<Player>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        remainingPlayers.forEach { player ->
+            Text(
+                text = "${getFirstName(player.name)} (${player.basePoint})",
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+            )
+        }
     }
 }

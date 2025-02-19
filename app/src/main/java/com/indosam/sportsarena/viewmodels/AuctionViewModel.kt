@@ -86,7 +86,8 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
             previousBidder = currentBidder // Update the previous highest bidder
             nextBidder() // Move to the next team
         } else {
-            _toastMessage.value = "Bid must be at least $minBid points and cannot exceed 350 points."
+            _toastMessage.value =
+                "Bid must be at least $minBid points and cannot exceed 350 points."
         }
     }
 
@@ -147,7 +148,7 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
     fun assignUnsoldPlayers() {
         _auctionState.update { state ->
             val updatedTeamPlayers = state.teamPlayers.toMutableMap()
-            val remainingPlayers = state.remainingPlayers.toMutableList()
+            val unsoldPlayers = _unsoldPlayers.value.toMutableList()
 
             // Calculate remaining capacity for each team
             val teamCapacities = state.teams.associateWith { team ->
@@ -155,22 +156,23 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
             }.toMutableMap()
 
             // Assign unsold players to teams with available capacity
-            val playersToAssign = remainingPlayers.toMutableList()
+            val playersToAssign = unsoldPlayers.toMutableList()
             for (player in playersToAssign) {
                 val availableTeams = state.teams.filter { teamCapacities.getOrDefault(it, 0) > 0 }
 
                 if (availableTeams.isNotEmpty()) {
                     val selectedTeam = availableTeams.shuffled().first()
-                    updatedTeamPlayers[selectedTeam]?.add(player) // Add player to selected team
+                    updatedTeamPlayers[selectedTeam]?.add(player)
                     teamCapacities[selectedTeam] = teamCapacities.getOrDefault(selectedTeam, 0) - 1
-                    remainingPlayers.remove(player) // Remove the player from remaining players
+                    unsoldPlayers.remove(player)
                 } else {
                     break // No more teams have capacity
                 }
             }
 
+            _unsoldPlayers.value = unsoldPlayers
+
             state.copy(
-                remainingPlayers = remainingPlayers,
                 teamPlayers = updatedTeamPlayers
             )
         }
@@ -178,7 +180,7 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
 
     fun canPlaceBid(team: String, bid: Int): Boolean {
         val teamBudget = _auctionState.value.teamBudgets[team] ?: 0
-        return teamBudget >= bid
+        return teamBudget >= bid && bid <= 350
     }
 
     fun skipTurn() {

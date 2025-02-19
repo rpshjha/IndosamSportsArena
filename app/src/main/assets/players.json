@@ -5,7 +5,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 200,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -16,7 +16,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -82,7 +82,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 200,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -93,7 +93,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 300,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -126,7 +126,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -192,7 +192,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -225,7 +225,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 300,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -236,7 +236,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 300,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -247,7 +247,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -258,7 +258,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -269,7 +269,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"
@@ -280,7 +280,7 @@
     "role": "Player",
     "isCaptain": false,
     "isViceCaptain": false,
-    "basePoint": 50,
+    "basePoint": 100,
     "dob": "01012000",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Left Arm Spin"

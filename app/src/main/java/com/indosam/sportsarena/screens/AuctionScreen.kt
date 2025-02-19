@@ -110,7 +110,7 @@ fun AuctionInfoButton(navController: NavController) {
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color.Blue)
+            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color(0xFFBB86FC))
         }
     }
 }
