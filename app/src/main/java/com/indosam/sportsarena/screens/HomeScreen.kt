@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import com.indosam.sportsarena.R
+import com.indosam.sportsarena.components.CustomButton
 
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -33,7 +34,8 @@ fun HomeScreen(navController: NavController) {
             painter = painterResource(id = R.drawable.home_bg),
             contentDescription = "Background Image",
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(top = 32.dp)
                 .graphicsLayer(alpha = 0.5f)
         )
@@ -88,7 +90,7 @@ fun HomeScreen(navController: NavController) {
                         .padding(horizontal = 12.dp),
                     shape = RoundedCornerShape(24.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.3f)) ,
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.3f)),
                 ) {
                     Column(
                         modifier = Modifier
@@ -96,29 +98,18 @@ fun HomeScreen(navController: NavController) {
                             .padding(28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        HomeScreenButton(text = "Auction") { navController.navigate("auction") }
+                        CustomButton(
+                            text = "Auction",
+                            onClick = { navController.navigate("auction") })
                         Spacer(modifier = Modifier.height(18.dp))
-                        HomeScreenButton(text = "Know Teams") { navController.navigate("teams") }
+                        CustomButton(text = "Know Teams", { navController.navigate("teams") })
                         Spacer(modifier = Modifier.height(18.dp))
-                        HomeScreenButton(text = "Upcoming Box Schedule") { navController.navigate("schedule") }
+                        CustomButton(
+                            text = "Upcoming Box Schedule",
+                            onClick = { navController.navigate("schedule") })
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun HomeScreenButton(text: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .height(64.dp),
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-    ) {
-        Text(text, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
 }

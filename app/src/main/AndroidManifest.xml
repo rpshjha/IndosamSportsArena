@@ -4,7 +4,9 @@
         android:allowBackup="true"
         android:theme="@style/Theme.IndosamSportsArena"
         android:label="Indosam Sports Arena"
-        android:exported="true">
+        android:exported="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
 
 <!--         Set MainActivity without Splash Theme -->
         <activity
