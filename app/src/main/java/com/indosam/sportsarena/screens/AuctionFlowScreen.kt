@@ -110,7 +110,6 @@ fun AuctionFlowScreen(
             TeamTable(
                 selectedTeamInfo,
                 auctionState.value.teamPlayers,
-                auctionState.value.teamBudgets
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -187,7 +186,6 @@ fun AuctionFlowScreen(
 fun TeamTable(
     selectedTeamInfo: Map<String, Pair<String, String>>,
     teamPlayers: Map<String, List<Player>>,
-    teamBudgets: Map<String, Int>
 ) {
     Box(
         modifier = Modifier
