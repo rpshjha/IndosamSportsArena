@@ -1,7 +1,9 @@
 package com.indosam.sportsarena.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -86,54 +95,20 @@ fun EmptyStateMessage() {
 
 
 @Composable
-fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
-    val age = remember(player.dob) { DateUtils.calculateAge(player.dob) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        NavigationButton(
-            onClick = onPrevious,
-            iconResId = R.drawable.icons_back,
-            contentDescription = "Previous Player"
-        )
-
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            PlayerIcon(player, Modifier.size(200.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            PlayerName(player.name)
-            Spacer(modifier = Modifier.height(8.dp))
-            PlayerDetail("Age", "$age yrs")
-            PlayerDetail("Batting", player.battingStyle)
-            PlayerDetail("Bowling", player.bowlingStyle)
-        }
-
-        NavigationButton(
-            onClick = onNext,
-            iconResId = R.drawable.icons_forward,
-            contentDescription = "Next Player"
-        )
-    }
-}
-
-@Composable
 fun NavigationButton(onClick: () -> Unit, iconResId: Int, contentDescription: String) {
     IconButton(
         onClick = onClick,
-        modifier = Modifier.size(48.dp)
+        modifier = Modifier
+            .size(48.dp)
+            .background(
+                color = MaterialTheme.colorScheme.primary,
+                shape = CircleShape
+            )
     ) {
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = contentDescription,
-            tint = Color.Black
+            tint = Color.White
         )
     }
 }
@@ -151,22 +126,137 @@ fun PlayerName(name: String) {
 }
 
 @Composable
+fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
+    val age = remember(player.dob) { DateUtils.calculateAge(player.dob) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.secondaryContainer
+                    )
+                )
+            )
+            .padding(16.dp)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Player Icon
+                PlayerIcon(player, Modifier.size(150.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Player Name and Age
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = player.name,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$age yrs",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = player.address,
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = player.aboutMe,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Player Details Table
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PlayerDetail("Batting Style", player.battingStyle)
+                        Divider()
+                        if (!player.bowlingStyle.isNullOrEmpty()) {
+                            PlayerDetail("Bowling Style", player.bowlingStyle)
+                            Divider()
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Navigation Buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            NavigationButton(
+                onClick = onPrevious,
+                iconResId = R.drawable.icons_back,
+                contentDescription = "Previous Player"
+            )
+            NavigationButton(
+                onClick = onNext,
+                iconResId = R.drawable.icons_forward,
+                contentDescription = "Next Player"
+            )
+        }
+    }
+}
+
+@Composable
 fun PlayerDetail(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Start
     ) {
-        Text(
-            text = label,
-            color = Color.LightGray,
-            fontStyle = FontStyle.Italic
-        )
+        if (!label.isNullOrEmpty()) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
-            color = Color.LightGray,
-            fontStyle = FontStyle.Italic,
-            textAlign = TextAlign.Start
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -176,25 +266,18 @@ fun PlayerIcon(player: Player, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val iconResId = remember(player.icon) {
-        if (player.icon != null) {
-            context.resources.getIdentifier(player.icon, "drawable", context.packageName)
+        if (!player.icon.isNullOrEmpty() && player.icon != "null") {
+            val resId =
+                context.resources.getIdentifier(player.icon, "drawable", context.packageName)
+            if (resId != 0) resId else R.drawable.boy
         } else {
-            0
+            R.drawable.boy
         }
     }
 
-    if (iconResId != 0) {
-        Image(
-            painter = painterResource(id = iconResId),
-            contentDescription = "Player Icon",
-            modifier = modifier
-        )
-    } else {
-        Icon(
-            painter = painterResource(id = R.drawable.boy),
-            contentDescription = "Default Player Icon",
-            modifier = modifier,
-            tint = Color.Gray
-        )
-    }
+    Image(
+        painter = painterResource(id = iconResId),
+        contentDescription = "Player Icon",
+        modifier = modifier
+    )
 }

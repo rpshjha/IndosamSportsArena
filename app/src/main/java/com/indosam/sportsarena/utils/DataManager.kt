@@ -19,6 +19,8 @@ object DataManager {
                 val player = Player(
                     id = obj.getInt("id"),
                     name = obj.getString("name"),
+                    aboutMe = obj.getString("aboutMe"),
+                    address = obj.getString("address"),
                     dob = obj.getString("dob"),
                     battingStyle = obj.getString("battingStyle"),
                     bowlingStyle = obj.getString("bowlingStyle"),
