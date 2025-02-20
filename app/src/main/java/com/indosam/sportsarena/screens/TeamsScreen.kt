@@ -128,6 +128,7 @@ fun PlayerName(name: String) {
 @Composable
 fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
     val age = remember(player.dob) { DateUtils.calculateAge(player.dob) }
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -151,6 +152,7 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(scrollState)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -249,7 +251,8 @@ fun PlayerDetail(label: String, value: String) {
                 text = label,
                 fontSize = 14.sp,
                 color = Color.Gray,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
@@ -257,6 +260,7 @@ fun PlayerDetail(label: String, value: String) {
             text = value,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1.5f)
         )
     }
 }
