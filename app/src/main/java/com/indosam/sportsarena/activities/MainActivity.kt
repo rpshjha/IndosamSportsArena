@@ -7,8 +7,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.indosam.sportsarena.R
-import com.indosam.sportsarena.screens.AuctionFlowScreen
+import com.indosam.sportsarena.screens.auction.AuctionFlowScreen
 import com.indosam.sportsarena.screens.AuctionScreen
 import com.indosam.sportsarena.screens.HomeScreen
 import com.indosam.sportsarena.screens.KnowAuctionRulesScreen

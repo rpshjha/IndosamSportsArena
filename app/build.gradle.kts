@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.indosam.sportsarena"
-        minSdk = 31
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -80,6 +80,12 @@ dependencies {
 
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // Provides compatibility for older versions
+//    implementation("androidx.appcompat:appcompat:1.6.1")
+//    implementation("androidx.core:core-ktx:1.12.0")
+//    implementation("com.google.android.material:material:1.9.0")
+
 
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")

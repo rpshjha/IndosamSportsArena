@@ -2,7 +2,9 @@ package com.indosam.sportsarena.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.indosam.sportsarena.models.AuctionState
 import com.indosam.sportsarena.models.Player
 import com.indosam.sportsarena.utils.JsonUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,10 +13,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AuctionViewModel(application: Application) : AndroidViewModel(application) {
+class AuctionViewModel(
+    application: Application,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
 
     // State for auction flow
-    private val _auctionState = MutableStateFlow(AuctionState(currentRound = 1))
+//    private val _auctionState = MutableStateFlow(AuctionState(currentRound = 1))
+    private val _auctionState = MutableStateFlow(
+        savedStateHandle.get<AuctionState>("auctionState") ?: AuctionState(currentRound = 1)
+    )
     val auctionState: StateFlow<AuctionState> = _auctionState.asStateFlow()
 
     // State for players
@@ -42,6 +50,15 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
     val skippedTeams: StateFlow<Set<String>> = _skippedTeams
 
     private var previousBidder: String? = null
+
+    init {
+        // Save auction state whenever it changes
+        viewModelScope.launch {
+            _auctionState.collect { state ->
+                savedStateHandle["auctionState"] = state
+            }
+        }
+    }
 
     fun loadPlayers(excludeNames: List<String> = emptyList()) {
         viewModelScope.launch {
@@ -221,15 +238,4 @@ class AuctionViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-
-    data class AuctionState(
-        val teams: List<String> = listOf("Indosam Titans", "Indosam Warriors", "Indosam Strikers"),
-        val currentRound: Int,
-        val currentBidder: String = teams.random(),
-        val startingBidder: String = currentBidder,
-        val currentBid: Int = 0,
-        val remainingPlayers: List<Player> = emptyList(),
-        val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
-        val teamBudgets: Map<String, Int> = teams.associateWith { 1000 }
-    )
 }
