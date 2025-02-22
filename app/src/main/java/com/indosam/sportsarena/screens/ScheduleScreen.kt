@@ -1,10 +1,28 @@
 package com.indosam.sportsarena.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Sports
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +52,9 @@ fun ScheduleScreen(navController: NavController) {
     )
 
     BaseScreen(title = "Upcoming Schedule", navController = navController) {
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+        LazyColumn(modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)) {
             items(schedules, key = { it.eventName }) { schedule ->
                 ScheduleCard(schedule)
             }
@@ -48,19 +68,65 @@ fun ScheduleCard(schedule: ScheduleData) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            ScheduleText(schedule.eventName, 18.sp, FontWeight.Bold)
-            ScheduleText("Date: ${schedule.date}", 14.sp, FontWeight.Medium, Color.DarkGray)
-            ScheduleText("Venue: ${schedule.venue}", 14.sp, FontWeight.Medium, Color.DarkGray)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Event,
+                    contentDescription = "Event",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                ScheduleText(schedule.eventName, 18.sp, FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Date",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                ScheduleText("Date: ${schedule.date}", 14.sp, FontWeight.Medium)
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Venue",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                ScheduleText("Venue: ${schedule.venue}", 14.sp, FontWeight.Medium)
+            }
 
             if (schedule.matches.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 ScheduleText("Matches:", 16.sp, FontWeight.SemiBold)
                 Column {
                     schedule.matches.forEach { match ->
-                        ScheduleText(match, 14.sp, FontWeight.Normal, Color.Black)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Sports,
+                                contentDescription = "Match",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            ScheduleText(match, 14.sp, FontWeight.Normal)
+                        }
                     }
                 }
             }
@@ -69,7 +135,12 @@ fun ScheduleCard(schedule: ScheduleData) {
 }
 
 @Composable
-fun ScheduleText(text: String, fontSize: TextUnit, fontWeight: FontWeight, color: Color = Color.Black) {
+fun ScheduleText(
+    text: String,
+    fontSize: TextUnit,
+    fontWeight: FontWeight,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
     Text(
         text = text,
         fontSize = fontSize,

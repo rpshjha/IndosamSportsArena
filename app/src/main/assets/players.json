@@ -88,7 +88,7 @@
     "dob": "24061986",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Right Arm Medium",
-    "icon": null
+    "icon": "jayesh"
   },
   {
     "id": 8,
@@ -140,12 +140,12 @@
     "dob": "22031985",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Right Arm Off Spin",
-    "icon": null
+    "icon": "prateek"
   },
   {
     "id": 12,
     "name": "Praphull Anand",
-    "aboutMe": "An aggressive and reliable match-winner who thrives under pressure",
+    "aboutMe": "A free-spirited hitter who plays the game his way—fearless, fun-loving, and always ready to take on a challenge with a smile!",
     "address": "B-802, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -153,12 +153,12 @@
     "dob": "19111986",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Right Arm Medium",
-    "icon": null
+    "icon": "praphull"
   },
   {
     "id": 13,
     "name": "Rupesh Jha",
-    "aboutMe": "Bats at the end, score few runs but stay at the crease. Sometimes leg-spin deliveries turn out good",
+    "aboutMe": "Apni tareef khud kya karu, suraj kabhi roshni ka shor nahi machata",
     "address": "D-1408, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -197,7 +197,7 @@
   {
     "id": 16,
     "name": "Rajiv Kumar",
-    "aboutMe": "He is the board of controller, keeps an tow on everything and a part time player",
+    "aboutMe": "He is the board of controller, keeps an tow on everything",
     "address": "D-803, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -210,7 +210,7 @@
   {
     "id": 17,
     "name": "Rahul Jain",
-    "aboutMe": "Strike bowler, can strike out in first couple of overs",
+    "aboutMe": "A fiery pacer who loves making early inroads—fast, fierce, and always hunting for wickets in the first few overs!",
     "address": "C-1101, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -236,7 +236,7 @@
   {
     "id": 19,
     "name": "Satish Joshi",
-    "aboutMe": "An all-rounder, known for tricky deliveries that challenge batsmen",
+    "aboutMe": "A crafty all-rounder with deceptive deliveries that keep batsmen guessing—smart, strategic, and always up for a challenge!",
     "address": "D-907, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -275,7 +275,7 @@
   {
     "id": 22,
     "name": "Sidharth Singh",
-    "aboutMe": "Star player, match-winner, top bowler & batsman—thrives in tournaments",
+    "aboutMe": "Match-winner with bat and ball, thrives in big games. Off the field? The ‘Bakar Samrat’!",
     "address": "D-803, Indosam",
     "isCaptain": false,
     "isViceCaptain": false,
@@ -296,7 +296,7 @@
     "dob": "29031979",
     "battingStyle": "Right Hand Batsman",
     "bowlingStyle": "Right Arm Fast",
-    "icon": null
+    "icon": "sumit"
   },
   {
     "id": 24,
