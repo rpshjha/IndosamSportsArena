@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,18 +44,14 @@ import androidx.navigation.NavController
 import com.google.gson.Gson
 import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.models.Team
+import com.indosam.sportsarena.utils.JsonUtils
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
-
-
-private val teams = listOf(
-    Team("Indosam Warriors"),
-    Team("Indosam Strikers"),
-    Team("Indosam Titans")
-)
 
 
 @Composable
 fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
+    val context = LocalContext.current
+    val teams = remember { mutableStateOf(JsonUtils.loadTeamsFromJson(context)) }
     val players by viewModel.players.collectAsState()
     val selectedPlayers by viewModel.selectedPlayers.collectAsState()
     val selectedTeamInfo by viewModel.selectedTeamInfo.collectAsState()
@@ -62,8 +59,8 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
     // State to manage captain and vice-captain selections for each team
     val teamSelections = remember {
         mutableStateMapOf<String, Pair<String, String>>().apply {
-            teams.forEach { team ->
-                this[team.name] = Pair("", "") // Initialize with empty selections
+            teams.value.forEach { team ->
+                this[team] = Pair("", "")
             }
         }
     }
@@ -88,16 +85,20 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(teams.size) { index ->
+                items(teams.value.size) { index ->
                     TeamCard(
-                        team = teams[index],
+                        team = Team(teams.value[index]),
                         allPlayers = players.map { it.name },
                         selectedPlayers = selectedPlayers,
-                        captain = teamSelections[teams[index].name]?.first ?: "",
-                        viceCaptain = teamSelections[teams[index].name]?.second ?: "",
+                        captain = teamSelections[teams.value[index]]?.first ?: "",
+                        viceCaptain = teamSelections[teams.value[index]]?.second ?: "",
                         onSelectionChanged = { captain, viceCaptain ->
-                            teamSelections[teams[index].name] = Pair(captain, viceCaptain)
-                            viewModel.updateSelectedTeamInfo(teams[index].name, captain, viceCaptain)
+                            teamSelections[teams.value[index]] = Pair(captain, viceCaptain)
+                            viewModel.updateSelectedTeamInfo(
+                                teams.value[index],
+                                captain,
+                                viceCaptain
+                            )
                         },
                         onPlayerSelected = viewModel::addSelectedPlayer
                     )
@@ -109,7 +110,7 @@ fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = vi
             CustomButton(
                 text = "Start Auction",
                 onClick = { navigateToAuctionFlow(navController, selectedTeamInfo) },
-                enabled = isAuctionReady(selectedTeamInfo)
+                enabled = isAuctionReady(selectedTeamInfo, teams.value.size)
             )
         }
     }
@@ -151,7 +152,11 @@ fun TeamCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            DropdownMenuComponent("Select Vice-Captain", viceCaptain, availablePlayers) { newViceCaptain ->
+            DropdownMenuComponent(
+                "Select Vice-Captain",
+                viceCaptain,
+                availablePlayers
+            ) { newViceCaptain ->
                 onSelectionChanged(captain, newViceCaptain)
                 onPlayerSelected(newViceCaptain)
             }
@@ -209,18 +214,25 @@ fun AuctionInfoButton(navController: NavController) {
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-            Icon(Icons.Default.Info, contentDescription = "Know Auction Rules", tint = Color(0xFFBB86FC))
+            Icon(
+                Icons.Default.Info,
+                contentDescription = "Know Auction Rules",
+                tint = Color(0xFFBB86FC)
+            )
         }
     }
 }
 
-private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>): Boolean {
-    return selectedTeamInfo.size == teams.size &&
+private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>, totalTeams: Int): Boolean {
+    return selectedTeamInfo.size == totalTeams &&
             selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
 }
 
 
-private fun navigateToAuctionFlow(navController: NavController, selectedTeamInfo: Map<String, Pair<String, String>>) {
+private fun navigateToAuctionFlow(
+    navController: NavController,
+    selectedTeamInfo: Map<String, Pair<String, String>>
+) {
     val selectedTeamsJson = Gson().toJson(selectedTeamInfo)
     navController.navigate("auctionFlow/$selectedTeamsJson")
 }

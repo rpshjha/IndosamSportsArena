@@ -13,15 +13,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.indosam.sportsarena.components.CustomButton
+import com.indosam.sportsarena.utils.JsonUtils
 
 @Composable
 fun KnowAuctionRulesScreen(navController: NavController) {
+    val context = LocalContext.current
+    val teams = JsonUtils.loadTeamsFromJson(context)
+
     BaseScreen(title = "Auction Rules", navController = navController) {
         Column(
             modifier = Modifier
@@ -29,9 +34,10 @@ fun KnowAuctionRulesScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
         ) {
             AuctionRuleSection("Default Teams")
-            AuctionRuleItem("1. Indosam Titans")
-            AuctionRuleItem("2. Indosam Warriors")
-            AuctionRuleItem("3. Indosam Strikers")
+            teams.forEachIndexed { index, team ->
+                AuctionRuleItem("${index + 1}. $team") // Dynamically list teams
+            }
+
             AuctionRuleItem("Each team has a Captain and Vice-Captain (pre-selected before the auction begins).")
 
             Spacer(modifier = Modifier.height(12.dp))

@@ -16,4 +16,20 @@ object JsonUtils {
             emptyList()
         }
     }
+
+    fun loadTeamsFromJson(context: Context): List<String> {
+        return try {
+            val json = context.assets.open("teams.json").bufferedReader().use { it.readText() }
+            val listType = object : TypeToken<List<String>>() {}.type
+            Gson().fromJson(json, listType) ?: emptyList()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    fun parseSelectedTeamInfo(json: String): Map<String, Pair<String, String>> {
+        val gson = Gson()
+        return gson.fromJson(json, object : TypeToken<Map<String, Pair<String, String>>>() {}.type)
+    }
 }

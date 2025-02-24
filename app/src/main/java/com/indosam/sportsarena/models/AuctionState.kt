@@ -4,12 +4,13 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class AuctionState(
-    val teams: List<String> = listOf("Indosam Titans", "Indosam Warriors", "Indosam Strikers"),
+    val teams: List<String>,
     val currentRound: Int,
-    val currentBidder: String = teams.random(),
+    val currentBidder: String = teams.first(),
     val startingBidder: String = currentBidder,
     val currentBid: Int = 0,
     val remainingPlayers: List<Player> = emptyList(),
+    val unsoldPlayers: List<Player> = emptyList(),
     val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
     val teamBudgets: Map<String, Int> = teams.associateWith { 1000 }
 ) : Parcelable {
@@ -20,6 +21,7 @@ data class AuctionState(
         startingBidder = parcel.readString() ?: "",
         currentBid = parcel.readInt(),
         remainingPlayers = parcel.createTypedArrayList(Player.CREATOR) ?: emptyList(),
+        unsoldPlayers = parcel.createTypedArrayList(Player.CREATOR) ?: emptyList(),
         teamPlayers = mutableMapOf<String, MutableList<Player>>().apply {
             val size = parcel.readInt()
             for (i in 0 until size) {
@@ -45,6 +47,7 @@ data class AuctionState(
         parcel.writeString(startingBidder)
         parcel.writeInt(currentBid)
         parcel.writeTypedList(remainingPlayers)
+        parcel.writeTypedList(unsoldPlayers)
         parcel.writeInt(teamPlayers.size)
         for ((key, value) in teamPlayers) {
             parcel.writeString(key)
