@@ -1,6 +1,11 @@
 package com.indosam.sportsarena.screens.auction
 
-import androidx.compose.foundation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,15 +16,28 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -28,8 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.indosam.sportsarena.components.CustomButton
+import com.indosam.sportsarena.models.AuctionLog
 import com.indosam.sportsarena.models.AuctionState
 import com.indosam.sportsarena.models.Player
+import com.indosam.sportsarena.screens.AuctionInfoButton
 import com.indosam.sportsarena.screens.BaseScreen
 import com.indosam.sportsarena.utils.JsonUtils.parseSelectedTeamInfo
 import com.indosam.sportsarena.utils.StringUtils.getFirstName
@@ -42,13 +62,16 @@ fun AuctionFlowScreen(
     selectedTeamsJson: String,
     viewModel: AuctionViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
     val selectedTeamInfo = parseSelectedTeamInfo(selectedTeamsJson)
     val excludeNames = selectedTeamInfo.values.flatMap { listOf(it.first, it.second) }
 
     val playersState = viewModel.players.collectAsState()
     val auctionState = viewModel.auctionState.collectAsState()
-
+    val auctionLogs = viewModel.auctionLogs.collectAsState()
     val toastMessage = viewModel.toastMessage.collectAsState()
+    val errorMessage = viewModel.errorMessage.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -82,12 +105,13 @@ fun AuctionFlowScreen(
                 AuctionContent(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
+
                         .padding(paddingValues)
                         .padding(16.dp),
                     navController = navController,
                     selectedTeamInfo = selectedTeamInfo,
                     auctionState = auctionState.value,
+                    auctionLogs = auctionLogs.value,
                     onBid = { bid -> viewModel.handleBid(bid) },
                     onSkip = { viewModel.skipTurn() },
                     onNext = { viewModel.nextTeam() },
@@ -105,54 +129,93 @@ private fun AuctionContent(
     navController: NavController,
     selectedTeamInfo: Map<String, Pair<String, String>>,
     auctionState: AuctionState,
+    auctionLogs: List<AuctionLog>,
     onBid: (Int) -> Unit,
     onSkip: () -> Unit,
     onNext: () -> Unit,
     onAssign: () -> Unit,
     onAssignUnsold: () -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AuctionRulesButton(navController)
-        TeamTable(selectedTeamInfo, auctionState.teamPlayers)
-        Spacer(modifier = Modifier.height(16.dp))
-        PointsTable(auctionState.teamBudgets)
-        Spacer(modifier = Modifier.height(20.dp))
-        AuctionControls(
-            currentBidder = auctionState.currentBidder,
-            remainingPlayers = auctionState.remainingPlayers,
-            unsoldPlayers = auctionState.unsoldPlayers,
-            currentBid = auctionState.currentBid,
-            onBid = onBid,
-            onSkip = onSkip,
-            onNext = onNext,
-            onAssign = onAssign,
-            onAssignUnsold = onAssignUnsold
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        PlayersListSection(
-            remainingPlayers = auctionState.remainingPlayers,
-            unsoldPlayers = auctionState.unsoldPlayers
-        )
-    }
-}
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    AuctionInfoButton(navController)
+                    TeamTable(selectedTeamInfo, auctionState.teamPlayers)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    PointsTable(auctionState.teamBudgets)
+                }
+            }
+        }
 
-@Composable
-private fun AuctionRulesButton(navController: NavController) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        horizontalArrangement = Arrangement.End
-    ) {
-        IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-            Icon(
-                Icons.Default.Info,
-                contentDescription = "Know Auction Rules",
-                tint = Color(0xFFBB86FC)
-            )
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                AuctionControls(
+                    currentBidder = auctionState.currentBidder,
+                    remainingPlayers = auctionState.remainingPlayers,
+                    currentBid = auctionState.currentBid,
+                    auctionState = auctionState,
+                    onBid = onBid,
+                    onSkip = onSkip,
+                    onNext = onNext,
+                    onAssign = onAssign,
+                    onAssignUnsold = onAssignUnsold
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                PlayersListSection(
+                    remainingPlayers = auctionState.remainingPlayers,
+                    unsoldPlayers = auctionState.unsoldPlayers
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                AuctionLogsSection(auctionLogs)
+            }
         }
     }
 }
@@ -162,35 +225,41 @@ private fun PlayersListSection(
     remainingPlayers: List<Player>,
     unsoldPlayers: List<Player>
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+    AnimatedVisibility(
+        visible = remainingPlayers.isNotEmpty() || unsoldPlayers.isNotEmpty(),
+        enter = fadeIn() + slideInVertically(),
+        exit = fadeOut() + slideOutVertically()
     ) {
-        PlayerListColumn(
-            title = "Remaining Players",
-            players = remainingPlayers
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PlayerListColumn(
-            title = "Unsold Players",
-            players = unsoldPlayers
-        )
-
-        if (remainingPlayers.isEmpty() && unsoldPlayers.isEmpty()) {
-            Text(
-                text = "No players remaining or unsold.",
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            PlayerListColumn(
+                title = "Remaining Players",
+                players = remainingPlayers
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            PlayerListColumn(
+                title = "Unsold Players",
+                players = unsoldPlayers
+            )
+
+            if (remainingPlayers.isEmpty() && unsoldPlayers.isEmpty()) {
+                Text(
+                    text = "No players remaining or unsold.",
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray
+                    )
+                )
+            }
         }
     }
 }
@@ -211,12 +280,28 @@ private fun PlayerListColumn(title: String, players: List<Player>) {
                 fontWeight = FontWeight.Bold
             )
         )
-        players.forEach { player ->
-            Text(
-                text = "${getFirstName(player.name)} (${player.basePoint})",
-                fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (players.isEmpty()) {
+                Text(
+                    text = "No players available",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }else {
+                players.forEach { player ->
+                    Text(
+                        text = "${getFirstName(player.name)} (${player.basePoint})",
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .fillMaxWidth()
+                    )
+                    Divider(color = Color.LightGray, thickness = 1.dp)
+                }
+            }
         }
     }
 }
@@ -225,14 +310,37 @@ private fun PlayerListColumn(title: String, players: List<Player>) {
 private fun AuctionControls(
     currentBidder: String,
     remainingPlayers: List<Player>,
-    unsoldPlayers: List<Player>,
     currentBid: Int,
+    auctionState: AuctionState,
     onBid: (Int) -> Unit,
     onSkip: () -> Unit,
     onNext: () -> Unit,
     onAssign: () -> Unit,
     onAssignUnsold: () -> Unit
 ) {
+    val showConfirmationDialog = remember { mutableStateOf(false) }
+
+    if (showConfirmationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showConfirmationDialog.value = false },
+            title = { Text("Confirm Action") },
+            text = { Text("Are you sure you want to assign unsold players?") },
+            confirmButton = {
+                Button(onClick = {
+                    onAssignUnsold()
+                    showConfirmationDialog.value = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showConfirmationDialog.value = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -245,7 +353,7 @@ private fun AuctionControls(
             val currentBidAmount = if (currentBid < initialBid) initialBid else currentBid
 
             Text(
-                text = "Auction Round ${currentPlayer.basePoint}",
+                text = "Auction Round ${auctionState.currentRound}",
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
@@ -347,24 +455,18 @@ private fun TeamTable(
     selectedTeamInfo: Map<String, Pair<String, String>>,
     teamPlayers: Map<String, List<Player>>,
 ) {
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.secondaryContainer
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(gradientBrush)
             .border(0.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
     ) {
         Column(modifier = Modifier.padding(4.dp)) {
             val attributes =
                 listOf("Team Name", "Captain", "VC", "P1", "P2", "P3", "P4", "P5", "P6")
             attributes.forEachIndexed { index, attribute ->
-                Row(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(
                         text = attribute,
                         fontSize = 16.sp,
@@ -434,6 +536,48 @@ private fun PointsTable(teamBudgets: Map<String, Int>) {
                                 .padding(4.dp)
                         )
                     }
+                }
+            }
+        }
+    }
+
+
+}
+
+@Composable
+private fun AuctionLogsSection(logs: List<AuctionLog>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "Auction Logs",
+            fontSize = 18.sp,
+            modifier = Modifier.padding(bottom = 8.dp),
+            style = TextStyle(
+                textDecoration = TextDecoration.Underline,
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (logs.isEmpty()) {
+                Text(
+                    text = "No logs available",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                logs.forEach { log ->
+                    Text(
+                        text = "${log.timestamp}: ${log.message}",
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Divider(color = Color.LightGray, thickness = 1.dp)
                 }
             }
         }

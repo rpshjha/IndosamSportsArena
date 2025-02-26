@@ -205,24 +205,6 @@ fun DropdownMenuComponent(
     }
 }
 
-@Composable
-fun AuctionInfoButton(navController: NavController) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        horizontalArrangement = Arrangement.End
-    ) {
-        IconButton(onClick = { navController.navigate("Know Auction Rules") }) {
-            Icon(
-                Icons.Default.Info,
-                contentDescription = "Know Auction Rules",
-                tint = Color(0xFFBB86FC)
-            )
-        }
-    }
-}
-
 private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>, totalTeams: Int): Boolean {
     return selectedTeamInfo.size == totalTeams &&
             selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
