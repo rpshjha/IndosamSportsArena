@@ -1,5 +1,6 @@
 package com.indosam.sportsarena.screens.auction
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,11 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,7 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.indosam.sportsarena.components.CustomAlertDialog
 import com.indosam.sportsarena.components.CustomButton
+import com.indosam.sportsarena.components.CustomButtonWithTooltip
 import com.indosam.sportsarena.models.AuctionLog
 import com.indosam.sportsarena.models.AuctionState
 import com.indosam.sportsarena.models.Player
@@ -62,7 +63,7 @@ fun AuctionFlowScreen(
     selectedTeamsJson: String,
     viewModel: AuctionViewModel = viewModel()
 ) {
-    val context = LocalContext.current
+    LocalContext.current
 
     val selectedTeamInfo = parseSelectedTeamInfo(selectedTeamsJson)
     val excludeNames = selectedTeamInfo.values.flatMap { listOf(it.first, it.second) }
@@ -114,8 +115,9 @@ fun AuctionFlowScreen(
                     auctionLogs = auctionLogs.value,
                     onBid = { bid -> viewModel.handleBid(bid) },
                     onSkip = { viewModel.skipTurn() },
-                    onNext = { viewModel.nextTeam() },
                     onAssign = { viewModel.assignPlayer() },
+                    onNext = { viewModel.nextTeam() },
+                    onAssignRemaining = { viewModel.assignRemainingPlayers() },
                     onAssignUnsold = { viewModel.assignUnsoldPlayers() }
                 )
             }
@@ -132,8 +134,9 @@ private fun AuctionContent(
     auctionLogs: List<AuctionLog>,
     onBid: (Int) -> Unit,
     onSkip: () -> Unit,
-    onNext: () -> Unit,
     onAssign: () -> Unit,
+    onNext: () -> Unit,
+    onAssignRemaining: () -> Unit,
     onAssignUnsold: () -> Unit
 ) {
     LazyColumn(
@@ -176,10 +179,27 @@ private fun AuctionContent(
                     auctionState = auctionState,
                     onBid = onBid,
                     onSkip = onSkip,
-                    onNext = onNext,
                     onAssign = onAssign,
+                    onNext = onNext,
+                    onAssignRemaining = onAssignRemaining,
                     onAssignUnsold = onAssignUnsold
                 )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                AuctionLogsSection(auctionLogs)
             }
         }
 
@@ -199,22 +219,6 @@ private fun AuctionContent(
                     remainingPlayers = auctionState.remainingPlayers,
                     unsoldPlayers = auctionState.unsoldPlayers
                 )
-            }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                AuctionLogsSection(auctionLogs)
             }
         }
     }
@@ -290,7 +294,7 @@ private fun PlayerListColumn(title: String, players: List<Player>) {
                     color = Color.Gray,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-            }else {
+            } else {
                 players.forEach { player ->
                     Text(
                         text = "${getFirstName(player.name)} (${player.basePoint})",
@@ -299,7 +303,7 @@ private fun PlayerListColumn(title: String, players: List<Player>) {
                             .padding(vertical = 4.dp)
                             .fillMaxWidth()
                     )
-                    Divider(color = Color.LightGray, thickness = 1.dp)
+                    HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
                 }
             }
         }
@@ -314,31 +318,17 @@ private fun AuctionControls(
     auctionState: AuctionState,
     onBid: (Int) -> Unit,
     onSkip: () -> Unit,
-    onNext: () -> Unit,
     onAssign: () -> Unit,
+    onNext: () -> Unit,
+    onAssignRemaining: () -> Unit,
     onAssignUnsold: () -> Unit
 ) {
-    val showConfirmationDialog = remember { mutableStateOf(false) }
+    val showDialog = remember { mutableStateOf(false) }
 
-    if (showConfirmationDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showConfirmationDialog.value = false },
-            title = { Text("Confirm Action") },
-            text = { Text("Are you sure you want to assign unsold players?") },
-            confirmButton = {
-                Button(onClick = {
-                    onAssignUnsold()
-                    showConfirmationDialog.value = false
-                }) {
-                    Text("Yes")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { showConfirmationDialog.value = false }) {
-                    Text("No")
-                }
-            }
-        )
+    val hasMadeDecision = remember { mutableStateOf(false) }
+
+    LaunchedEffect(remainingPlayers.firstOrNull()) {
+        hasMadeDecision.value = false
     }
 
     Column(
@@ -392,7 +382,10 @@ private fun AuctionControls(
             ) {
                 CustomButton(
                     text = "Place Bid",
-                    onClick = { onBid(currentBidAmount + 50) },
+                    onClick = {
+                        onBid(currentBidAmount + 50)
+                        hasMadeDecision.value = true
+                    },
                     enabled = remainingPlayers.isNotEmpty(),
                     modifier = Modifier.weight(1f),
                     backgroundColor = Color.Green
@@ -400,7 +393,10 @@ private fun AuctionControls(
                 Spacer(modifier = Modifier.width(8.dp))
                 CustomButton(
                     text = "Skip Turn",
-                    onClick = onSkip,
+                    onClick = {
+                        onSkip()
+                        hasMadeDecision.value = true
+                    },
                     enabled = remainingPlayers.isNotEmpty(),
                     modifier = Modifier.weight(1f),
                     backgroundColor = Color.Red
@@ -413,10 +409,20 @@ private fun AuctionControls(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                CustomButton(
-                    text = "Next Team",
-                    onClick = onNext,
+                CustomButtonWithTooltip(
+                    text = "Assign Current Player",
+                    onClick = onAssign,
+                    enabled = hasMadeDecision.value,
                     modifier = Modifier.weight(1f),
+                    tooltipText = if (!hasMadeDecision.value) "Cannot assign player: No decision (bid/skip) made by the team." else null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                CustomButtonWithTooltip(
+                    text = "Move to Next Team",
+                    onClick = onNext,
+                    enabled = hasMadeDecision.value,
+                    modifier = Modifier.weight(1f),
+                    tooltipText = if (!hasMadeDecision.value) "Cannot move to next team: Current team has not made a decision (bid/skip)." else null
                 )
             }
 
@@ -426,16 +432,35 @@ private fun AuctionControls(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                CustomButton(
-                    text = "Assign Player",
-                    onClick = onAssign,
-                    modifier = Modifier.weight(1f)
+                CustomButtonWithTooltip(
+                    text = "Assign Remaining",
+                    onClick = {
+                        showDialog.value = true
+                    },
+                    enabled = auctionState.remainingPlayers.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                    tooltipText = if (auctionState.remainingPlayers.isEmpty()) "No Remaining players available to assign." else null
                 )
+
+                if (showDialog.value) {
+                    CustomAlertDialog(
+                        showDialog = showDialog,
+                        title = "Confirm Action",
+                        text = "Are you sure you want to assign the remaining players?",
+                        onConfirm = {
+                            onAssignRemaining()
+                        },
+                        onDismiss = { Log.d("CustomAlertDialog", "Dialog dismissed") }
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(8.dp))
-                CustomButton(
+                CustomButtonWithTooltip(
                     text = "Assign Unsold",
                     onClick = onAssignUnsold,
-                    modifier = Modifier.weight(1f)
+                    enabled = auctionState.unsoldPlayers.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                    tooltipText = if (auctionState.unsoldPlayers.isEmpty()) "No unsold players available to assign." else null
                 )
             }
         } else {
@@ -577,7 +602,7 @@ private fun AuctionLogsSection(logs: List<AuctionLog>) {
                         fontSize = 14.sp,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
-                    Divider(color = Color.LightGray, thickness = 1.dp)
+                    HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
                 }
             }
         }

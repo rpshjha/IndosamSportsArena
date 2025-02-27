@@ -18,7 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -111,18 +110,6 @@ fun NavigationButton(onClick: () -> Unit, iconResId: Int, contentDescription: St
             tint = Color.White
         )
     }
-}
-
-@Composable
-fun PlayerName(name: String) {
-    Text(
-        text = name,
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 @Composable
@@ -207,10 +194,10 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         PlayerDetail("Batting Style", player.battingStyle)
-                        Divider()
-                        if (!player.bowlingStyle.isNullOrEmpty()) {
+                        HorizontalDivider()
+                        if (player.bowlingStyle.isNotEmpty()) {
                             PlayerDetail("Bowling Style", player.bowlingStyle)
-                            Divider()
+                            HorizontalDivider()
                         }
                     }
                 }
@@ -246,7 +233,7 @@ fun PlayerDetail(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        if (!label.isNullOrEmpty()) {
+        if (label.isNotEmpty()) {
             Text(
                 text = label,
                 fontSize = 14.sp,

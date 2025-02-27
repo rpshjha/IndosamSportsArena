@@ -2,16 +2,19 @@ package com.indosam.sportsarena.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -45,7 +48,6 @@ fun HomeScreen(navController: NavController) {
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Background Image
         Image(
             painter = painterResource(id = R.drawable.icc_logo),
             contentDescription = "Background Image",
@@ -55,7 +57,6 @@ fun HomeScreen(navController: NavController) {
                 .graphicsLayer(alpha = 0.5f)
         )
 
-        // Gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,9 +79,7 @@ fun HomeScreen(navController: NavController) {
             Text(
                 text = "Welcome to Indosam Cricket Club",
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 38.sp,
-                    color = Color.White
+                    fontWeight = FontWeight.ExtraBold, fontSize = 38.sp, color = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,34 +105,46 @@ fun HomeScreen(navController: NavController) {
                 ) {
                     CustomButton(
                         text = "Auction",
-                        onClick = { navController.navigate("auction") }
-                    )
+                        onClick = { navController.navigate("auction") })
                     Spacer(modifier = Modifier.height(18.dp))
                     CustomButton(
                         text = "Know Teams",
-                        onClick = { navController.navigate("teams") }
-                    )
+                        onClick = { navController.navigate("teams") })
                     Spacer(modifier = Modifier.height(18.dp))
-                    CustomButton(
-                        text = "Upcoming Box Schedule",
-                        onClick = { navController.navigate("schedule") }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "Follow us on Instagram",
-                        color = Color.White,
-                        modifier = Modifier
-                            .clickable {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://www.instagram.com/indosamcricket/")
-                                )
-                                context.startActivity(intent)
-                            }
-                    )
+                    CustomButton(text = "Upcoming Box Schedule",
+                        onClick = { navController.navigate("schedule") })
                 }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row(
+                modifier = Modifier
+                    .clickable {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://www.instagram.com/indosamcricket/")
+                        )
+                        context.startActivity(intent)
+                    }
+                    .padding(vertical = 20.dp)
+                    .animateContentSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Follow us on",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Image(
+                    painter = painterResource(id = R.drawable.instagram),
+                    contentDescription = "Instagram Icon",
+                    modifier = Modifier
+                        .height(28.dp)
+                )
             }
         }
     }

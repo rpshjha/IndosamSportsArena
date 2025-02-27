@@ -5,18 +5,18 @@ plugins {
 
 android {
     namespace = "com.indosam.sportsarena"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.indosam.sportsarena"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = 26
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
-            useSupportLibrary = true // Enable vector drawable support
+            useSupportLibrary = true
         }
     }
 
@@ -57,39 +57,38 @@ android {
 dependencies {
     // Core dependencies
     implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
     // Compose dependencies
-    implementation("androidx.activity:activity-compose:1.7.2")
-    implementation("androidx.compose.ui:ui:1.5.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.0")
+    implementation("androidx.activity:activity-compose:1.10.0")
+    implementation("androidx.compose.ui:ui:1.7.8")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.8")
 
     // Material Design Components (Add this line)
-    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.google.android.material:material:1.12.0")
 
     // Material 3
-    implementation("androidx.compose.material3:material3:1.1.1")
-    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.material3:material3-android:1.3.1")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.0")
+    implementation("androidx.navigation:navigation-compose:2.8.7")
 
     // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
     implementation("io.coil-kt:coil-compose:2.4.0")
 
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
 
-
-
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.0")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.0")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")
 }

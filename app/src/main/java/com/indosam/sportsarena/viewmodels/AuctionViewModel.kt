@@ -201,6 +201,42 @@ class AuctionViewModel(
         _skippedTeams.value = emptySet()
     }
 
+    fun assignRemainingPlayers() {
+        _auctionState.update { state ->
+            val remainingPlayers = state.remainingPlayers.toMutableList()
+            val updatedTeamPlayers = state.teamPlayers.toMutableMap()
+
+
+            val numTeams = state.teams.size
+            val playersPerTeam = remainingPlayers.size / numTeams
+            val extraPlayers = remainingPlayers.size % numTeams
+
+
+            remainingPlayers.shuffle()
+
+
+            var playerIndex = 0
+            for (i in state.teams.indices) {
+                val team = state.teams[i]
+                val playersToAssign = playersPerTeam + if (i < extraPlayers) 1 else 0
+
+                for (j in 0 until playersToAssign) {
+                    if (playerIndex < remainingPlayers.size) {
+                        val player = remainingPlayers[playerIndex]
+                        updatedTeamPlayers.getOrPut(team) { mutableListOf() }.add(player)
+                        logActivity("${player.name} assigned to $team from remaining players.")
+                        playerIndex++
+                    }
+                }
+            }
+
+            state.copy(
+                remainingPlayers = emptyList(),
+                teamPlayers = updatedTeamPlayers
+            )
+        }
+    }
+
     fun assignUnsoldPlayers() {
         _auctionState.update { state ->
             val updatedTeamPlayers = state.teamPlayers.toMutableMap()

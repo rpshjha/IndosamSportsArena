@@ -21,18 +21,20 @@ import androidx.compose.ui.unit.sp
 fun CustomButton(
     text: String,
     onClick: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(64.dp),
     shape: Shape = CircleShape,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
     textColor: Color = Color.White,
-    fontSize: Int = 20,
-    enabled: Boolean = true
+    fontSize: Int = 20
 ) {
     Button(
-        onClick = onClick,
+        onClick = { if (enabled) onClick() },
         modifier = modifier,
         shape = shape,
-        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (enabled) backgroundColor else Color.Gray
+        ),
         enabled = enabled
     ) {
         Text(
