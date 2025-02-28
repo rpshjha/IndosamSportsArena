@@ -1,5 +1,6 @@
 package com.indosam.sportsarena.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,11 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.indosam.sportsarena.R
 
 data class ScheduleData(
     val eventName: String,
@@ -55,6 +58,12 @@ fun ScheduleScreen(navController: NavController) {
         LazyColumn(modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)) {
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                ScheduleFooter()
+            }
+
             items(schedules, key = { it.eventName }) { schedule ->
                 ScheduleCard(schedule)
             }
@@ -148,4 +157,41 @@ fun ScheduleText(
         color = color,
         modifier = Modifier.padding(bottom = 2.dp)
     )
+}
+
+@Composable
+fun ScheduleFooter() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+            Image(
+                painter = painterResource(id = R.drawable.icc_logo),
+                contentDescription = "ICC Logo",
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Image(
+                painter = painterResource(id = R.drawable.trophy),
+                contentDescription = "Trophy",
+                modifier = Modifier.size(48.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Image(
+            painter = painterResource(id = R.drawable.schedule_banner),
+            contentDescription = "Schedule Banner",
+            modifier = Modifier.fillMaxWidth().height(100.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Image(
+            painter = painterResource(id = R.drawable.captains),
+            contentDescription = "Captains Image",
+            modifier = Modifier.fillMaxWidth().height(150.dp)
+        )
+
+    }
 }
