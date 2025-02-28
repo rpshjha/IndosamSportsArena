@@ -45,13 +45,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.indosam.sportsarena.components.CustomAlertDialog
-import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.components.CustomButtonWithTooltip
 import com.indosam.sportsarena.models.AuctionLog
 import com.indosam.sportsarena.models.AuctionState
 import com.indosam.sportsarena.models.Player
 import com.indosam.sportsarena.screens.AuctionInfoButton
 import com.indosam.sportsarena.screens.BaseScreen
+import com.indosam.sportsarena.screens.TossDialog
 import com.indosam.sportsarena.utils.JsonUtils.parseSelectedTeamInfo
 import com.indosam.sportsarena.utils.StringUtils.getFirstName
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
@@ -73,6 +73,9 @@ fun AuctionFlowScreen(
     val auctionLogs = viewModel.auctionLogs.collectAsState()
     val toastMessage = viewModel.toastMessage.collectAsState()
     val errorMessage = viewModel.errorMessage.collectAsState()
+
+    val showTossDialog = viewModel.showTossDialog.collectAsState().value
+    val tossWinner = viewModel.tossWinner.collectAsState().value
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -113,13 +116,23 @@ fun AuctionFlowScreen(
                     selectedTeamInfo = selectedTeamInfo,
                     auctionState = auctionState.value,
                     auctionLogs = auctionLogs.value,
-                    onBid = { bid -> viewModel.handleBid(bid) },
+                    onBid = { viewModel.handleBid() },
                     onSkip = { viewModel.skipTurn() },
-                    onAssign = { viewModel.assignPlayer() },
+                    onAssignCurrent = { viewModel.assignCurrentPlayer() },
                     onNext = { viewModel.nextTeam() },
                     onAssignRemaining = { viewModel.assignRemainingPlayers() },
-                    onAssignUnsold = { viewModel.assignUnsoldPlayers() }
+                    onAssignUnsold = { viewModel.assignUnsoldPlayers() },
+                    viewModel = viewModel
                 )
+
+                if (showTossDialog) {
+                    TossDialog(
+                        showDialog = remember { viewModel.showTossDialog },
+                        onConfirm = { viewModel.assignPlayerAfterToss() },
+                        onDismiss = { viewModel.dismissTossDialog() },
+                        tossWinner = tossWinner
+                    )
+                }
             }
         )
     }
@@ -132,13 +145,17 @@ private fun AuctionContent(
     selectedTeamInfo: Map<String, Pair<String, String>>,
     auctionState: AuctionState,
     auctionLogs: List<AuctionLog>,
-    onBid: (Int) -> Unit,
+    onBid: () -> Unit,
     onSkip: () -> Unit,
-    onAssign: () -> Unit,
+    onAssignCurrent: () -> Unit,
     onNext: () -> Unit,
     onAssignRemaining: () -> Unit,
-    onAssignUnsold: () -> Unit
+    onAssignUnsold: () -> Unit,
+    viewModel: AuctionViewModel
 ) {
+    val biddingTeams = viewModel.biddingTeams.collectAsState().value
+    val teamDecisions = viewModel.teamDecisions.collectAsState().value
+
     LazyColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -179,10 +196,13 @@ private fun AuctionContent(
                     auctionState = auctionState,
                     onBid = onBid,
                     onSkip = onSkip,
-                    onAssign = onAssign,
+                    onAssignCurrent = onAssignCurrent,
                     onNext = onNext,
                     onAssignRemaining = onAssignRemaining,
-                    onAssignUnsold = onAssignUnsold
+                    onAssignUnsold = onAssignUnsold,
+                    teamDecisions = teamDecisions,
+                    biddingTeams = biddingTeams,
+                    viewModel = viewModel
                 )
             }
         }
@@ -316,20 +336,20 @@ private fun AuctionControls(
     remainingPlayers: List<Player>,
     currentBid: Int,
     auctionState: AuctionState,
-    onBid: (Int) -> Unit,
+    onBid: () -> Unit,
     onSkip: () -> Unit,
-    onAssign: () -> Unit,
+    onAssignCurrent: () -> Unit,
     onNext: () -> Unit,
     onAssignRemaining: () -> Unit,
-    onAssignUnsold: () -> Unit
+    onAssignUnsold: () -> Unit,
+    teamDecisions: Map<String, String>,
+    biddingTeams: Set<String>,
+    viewModel: AuctionViewModel
 ) {
-    val showDialog = remember { mutableStateOf(false) }
-
-    val hasMadeDecision = remember { mutableStateOf(false) }
-
-    LaunchedEffect(remainingPlayers.firstOrNull()) {
-        hasMadeDecision.value = false
-    }
+    val showAssignCurrentDialog = remember { mutableStateOf(false) }
+    val showAssignRemainingDialog = remember { mutableStateOf(false) }
+    val allTeamsMadeDecision = teamDecisions.size == auctionState.teams.size
+    val isFirstBidderInRound = biddingTeams.isEmpty()
 
     Column(
         modifier = Modifier
@@ -341,6 +361,18 @@ private fun AuctionControls(
         if (currentPlayer != null) {
             val initialBid = currentPlayer.basePoint
             val currentBidAmount = if (currentBid < initialBid) initialBid else currentBid
+
+            val hasPlacedBid = teamDecisions[currentBidder] == "BID"
+            val hasSkipped = teamDecisions[currentBidder] == "SKIP"
+
+            val teamBudget = auctionState.teamBudgets[currentBidder] ?: 0
+            val canAffordBid = viewModel.canPlaceBid(currentBidder, currentBidAmount + 50)
+
+            val isPlaceBidEnabled = !hasSkipped && canAffordBid && remainingPlayers.isNotEmpty()
+
+            val isSkipTurnEnabled = !hasPlacedBid && !hasSkipped && remainingPlayers.isNotEmpty()
+
+            val isMoveToNextEnabled = !isPlaceBidEnabled && !isSkipTurnEnabled
 
             Text(
                 text = "Auction Round ${auctionState.currentRound}",
@@ -368,8 +400,26 @@ private fun AuctionControls(
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
             )
+            if (!isFirstBidderInRound) {
+                Text(
+                    text = "Last Bid Amount: $currentBidAmount",
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 16.dp)
+                )
+            }
             Text(
-                text = "Bidding Amount: $currentBidAmount",
+                text = if (isFirstBidderInRound) {
+                    "Min Bid Amount Required: $initialBid"
+                } else {
+                    val nextBid = currentBidAmount + 50
+                    if (nextBid <= 350) {
+                        "Min Bid Amount Required: $nextBid"
+                    } else {
+                        "Bid limit reached! Cannot exceed 350."
+                    }
+                },
                 fontSize = 18.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
@@ -380,26 +430,22 @@ private fun AuctionControls(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                CustomButton(
+                CustomButtonWithTooltip(
                     text = "Place Bid",
-                    onClick = {
-                        onBid(currentBidAmount + 50)
-                        hasMadeDecision.value = true
-                    },
-                    enabled = remainingPlayers.isNotEmpty(),
+                    onClick = { onBid() },
+                    enabled = isPlaceBidEnabled,
                     modifier = Modifier.weight(1f),
-                    backgroundColor = Color.Green
+                    backgroundColor = Color.Green,
+                    tooltipText = if (!canAffordBid) "Cannot place bid: Max budget reached." else null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                CustomButton(
+                CustomButtonWithTooltip(
                     text = "Skip Turn",
-                    onClick = {
-                        onSkip()
-                        hasMadeDecision.value = true
-                    },
-                    enabled = remainingPlayers.isNotEmpty(),
+                    onClick = { onSkip() },
+                    enabled = isSkipTurnEnabled,
                     modifier = Modifier.weight(1f),
-                    backgroundColor = Color.Red
+                    backgroundColor = Color.Red,
+                    tooltipText = if (!canAffordBid) "Cannot place bid: Max budget reached." else null
                 )
             }
 
@@ -411,18 +457,34 @@ private fun AuctionControls(
             ) {
                 CustomButtonWithTooltip(
                     text = "Assign Current Player",
-                    onClick = onAssign,
-                    enabled = hasMadeDecision.value,
+                    onClick = {
+                        showAssignCurrentDialog.value = true
+                    },
+                    enabled = allTeamsMadeDecision,
                     modifier = Modifier.weight(1f),
-                    tooltipText = if (!hasMadeDecision.value) "Cannot assign player: No decision (bid/skip) made by the team." else null
+                    tooltipText = if (!allTeamsMadeDecision) "Cannot assign player: No decision (bid/skip) made by the team." else null
                 )
+
+                if (showAssignCurrentDialog.value) {
+                    CustomAlertDialog(
+                        showDialog = showAssignCurrentDialog,
+                        title = "Confirm Action",
+                        text = "Are you sure you want to assign the current player?",
+                        onConfirm = {
+                            onAssignCurrent()
+                        },
+                        onDismiss = { Log.d("CustomAlertDialog", "Dialog dismissed") }
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(8.dp))
+
                 CustomButtonWithTooltip(
                     text = "Move to Next Team",
                     onClick = onNext,
-                    enabled = hasMadeDecision.value,
+                    enabled = isMoveToNextEnabled,
                     modifier = Modifier.weight(1f),
-                    tooltipText = if (!hasMadeDecision.value) "Cannot move to next team: Current team has not made a decision (bid/skip)." else null
+                    tooltipText = if (!allTeamsMadeDecision) "Cannot move to next team: Current team has not made a decision (bid/skip)." else null
                 )
             }
 
@@ -435,16 +497,16 @@ private fun AuctionControls(
                 CustomButtonWithTooltip(
                     text = "Assign Remaining",
                     onClick = {
-                        showDialog.value = true
+                        showAssignRemainingDialog.value = true
                     },
                     enabled = auctionState.remainingPlayers.isNotEmpty(),
                     modifier = Modifier.weight(1f),
                     tooltipText = if (auctionState.remainingPlayers.isEmpty()) "No Remaining players available to assign." else null
                 )
 
-                if (showDialog.value) {
+                if (showAssignRemainingDialog.value) {
                     CustomAlertDialog(
-                        showDialog = showDialog,
+                        showDialog = showAssignRemainingDialog,
                         title = "Confirm Action",
                         text = "Are you sure you want to assign the remaining players?",
                         onConfirm = {
@@ -596,9 +658,9 @@ private fun AuctionLogsSection(logs: List<AuctionLog>) {
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             } else {
-                logs.forEach { log ->
+                logs.reversed().forEach { log ->
                     Text(
-                        text = "${log.timestamp}: ${log.message}",
+                        text = log.message,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )

@@ -6,13 +6,14 @@ import android.os.Parcelable
 data class AuctionState(
     val teams: List<String>,
     val currentRound: Int,
-    val currentBidder: String = teams.first(),
+    val currentBidder: String = teams.firstOrNull() ?: "",
     val startingBidder: String = currentBidder,
     val currentBid: Int = 0,
     val remainingPlayers: List<Player> = emptyList(),
     val unsoldPlayers: List<Player> = emptyList(),
     val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
-    val teamBudgets: Map<String, Int> = teams.associateWith { 1000 }
+    val teamBudgets: Map<String, Int> = teams.associateWith { 1000 },
+    val biddingTeams: MutableList<String> = teams.toMutableList()
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         teams = parcel.createStringArrayList() ?: emptyList(),
@@ -37,7 +38,8 @@ data class AuctionState(
                 val value = parcel.readInt()
                 this[key] = value
             }
-        }
+        },
+        biddingTeams = parcel.createStringArrayList()?.toMutableList() ?: mutableListOf()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -58,6 +60,7 @@ data class AuctionState(
             parcel.writeString(key)
             parcel.writeInt(value)
         }
+        parcel.writeStringList(biddingTeams)
     }
 
     override fun describeContents(): Int {
