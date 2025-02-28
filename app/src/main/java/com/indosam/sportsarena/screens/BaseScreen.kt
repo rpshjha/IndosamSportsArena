@@ -88,13 +88,25 @@ fun BaseScreen(
                     Spacer(modifier = Modifier.weight(1f))
                 }
 
-                Image(
-                    painter = painterResource(id = R.drawable.isa_banner),
-                    contentDescription = "App Logo",
-                    modifier = Modifier
-                        .height(40.dp)
-                        .padding(horizontal = 16.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.icc_logo),
+                        contentDescription = "Secondary Logo",
+                        modifier = Modifier
+                            .height(20.dp)
+                            .padding(end = 4.dp)
+                    )
+
+                    Image(
+                        painter = painterResource(id = R.drawable.icc_banner_1),
+                        contentDescription = "App Logo",
+                        modifier = Modifier
+                            .height(30.dp)
+                    )
+                }
 
                 if (showHomeButton) {
                     IconButton(
