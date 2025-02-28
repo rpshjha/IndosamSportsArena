@@ -99,7 +99,7 @@ fun TossDialog(
 
                     if (isTossInProgress) {
                         Text(
-                            text = "All teams have placed the maximum bid. Performing toss...",
+                            text = "All eligible teams have placed the maximum bid. Performing toss...",
                             fontSize = 16.sp,
                             color = Color.DarkGray
                         )

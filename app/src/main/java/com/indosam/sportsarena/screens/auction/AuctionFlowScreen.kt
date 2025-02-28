@@ -374,6 +374,8 @@ private fun AuctionControls(
 
             val isMoveToNextEnabled = !isPlaceBidEnabled && !isSkipTurnEnabled
 
+            val maxBid = viewModel.calculateMaxBid(currentBidder)
+
             Text(
                 text = "Auction Round ${auctionState.currentRound}",
                 fontSize = 18.sp,
@@ -424,6 +426,14 @@ private fun AuctionControls(
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "Max Bid $currentBidder Can Place is $maxBid",
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp),
             )
 
             Row(

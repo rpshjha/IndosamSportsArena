@@ -20,16 +20,15 @@ import kotlinx.coroutines.launch
 
 
 class AuctionViewModel(
-    application: Application,
-    savedStateHandle: SavedStateHandle
+    application: Application, savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
+    private val minBid: Int = ResourceUtils.getMinBid(application.applicationContext)
     private val maxBid: Int = ResourceUtils.getMaxBid(application.applicationContext)
 
     private val _auctionState = MutableStateFlow(
         savedStateHandle.get<AuctionState>("auctionState") ?: AuctionState(
-            teams = JsonUtils.loadTeamsFromJson(application.applicationContext),
-            currentRound = 1
+            teams = JsonUtils.loadTeamsFromJson(application.applicationContext), currentRound = 1
         )
     )
     val auctionState: StateFlow<AuctionState> = _auctionState.asStateFlow()
@@ -103,27 +102,19 @@ class AuctionViewModel(
         val currentBidder = currentState.currentBidder
         val minBid = currentState.remainingPlayers.firstOrNull()?.basePoint ?: 0
         val isFirstBidderInRound = _biddingTeams.value.isEmpty()
-
-        Log.d("AuctionViewModel", "Current Bidder: $currentBidder")
-        Log.d("AuctionViewModel", "Is First Bidder in Round: $isFirstBidderInRound")
-        Log.d("AuctionViewModel", "Current Bid: ${currentState.currentBid}")
-        Log.d("AuctionViewModel", "Min Bid (Base Point): $minBid")
-
+        val allPreviousTeamsSkipped = _skippedTeams.value.containsAll(currentState.teams.takeWhile { it != currentBidder })
 
         // Calculate the bid amount
-        val bid = if (isFirstBidderInRound) {
-            minBid // First bidder places a bid equal to the base point
-        } else {
-            currentState.currentBid + 50 // Subsequent bidders increment the bid
+        val bid = when {
+            isFirstBidderInRound -> minBid
+            else -> currentState.currentBid + 50
         }
 
-        var finalBid = maxOf(minBid, bid)
-
-        Log.d("AuctionViewModel", "Calculated Bid: $finalBid")
+        val finalBid = maxOf(minBid, bid).coerceAtMost(maxBid)
 
         if (finalBid > maxBid) {
-            finalBid = minOf(finalBid, maxBid)
             showError("Bid cannot exceed $maxBid points.")
+            return
         }
 
         if (!canPlaceBid(currentBidder, finalBid)) return
@@ -134,16 +125,53 @@ class AuctionViewModel(
         _biddingTeams.update { it + currentBidder }
         _teamDecisions.update { it + (currentBidder to "BID") }
 
-        Log.d("AuctionViewModel", "Bid placed: $finalBid by $currentBidder")
-
         logActivity("$currentBidder placed a bid of $finalBid for ${currentState.remainingPlayers.firstOrNull()?.name}")
 
-        if (finalBid == maxBid && allTeamsPlacedMaxBid()) {
-            Log.d("AuctionViewModel", "All teams placed max bid. Triggering toss.")
-            performToss()
-            _showTossDialog.value = true
+        if (finalBid == maxBid) {
+            // Enter max bid phase: cycle through remaining teams
+            val teams = currentState.teams
+            val nextIndex = (teams.indexOf(currentBidder) + 1) % teams.size
+            var currentIndex = nextIndex
+            var allHandled = false
+
+            while (!allHandled) {
+                val team = teams[currentIndex]
+                if (_skippedTeams.value.contains(team) || _teamBids.value[team] == maxBid) {
+                    currentIndex = (currentIndex + 1) % teams.size
+                    if (currentIndex == nextIndex) {
+                        allHandled = true
+                    }
+                } else {
+                    _auctionState.update { it.copy(currentBidder = team) }
+                    break
+                }
+            }
+
+            if (allHandled) {
+                val maxBidders = _teamBids.value.filter { it.value == maxBid }.keys.toList()
+                if (maxBidders.size > 1) {
+                    performToss(maxBidders)
+                    _showTossDialog.value = true
+                } else {
+                    assignCurrentPlayer()
+                }
+            }
         } else {
-            moveToNextBidder()
+            // Check if all other teams have handled (skipped or bid)
+            val otherTeams = currentState.teams.filter { it != currentBidder }
+            val allOthersHandled = otherTeams.all { team ->
+                _skippedTeams.value.contains(team) || _biddingTeams.value.contains(team)
+            }
+
+            if (allOthersHandled) {
+                assignCurrentPlayer()
+                _teamBids.value = emptyMap()
+                _skippedTeams.value = emptySet()
+                _biddingTeams.value = emptySet()
+                _teamDecisions.value = emptyMap()
+            } else {
+                moveToNextBidder()
+            }
         }
     }
 
@@ -152,16 +180,24 @@ class AuctionViewModel(
         val teams = currentState.teams
         val teamBids = _teamBids.value
 
-        return teams.all { team ->
+        // Filter teams that can afford the maximum bid
+        val eligibleTeams = teams.filter { team ->
+            val teamBudget = currentState.teamBudgets[team] ?: 0
+            teamBudget >= maxBid && !_skippedTeams.value.contains(team)
+        }
+
+        // Check if all eligible teams have placed the maximum bid
+        return eligibleTeams.all { team ->
             teamBids[team] == maxBid
         }
     }
 
-    private fun performToss() {
-        val currentState = _auctionState.value
-        val teams = currentState.teams
-        val winningTeam = teams.random()
-
+    private fun performToss(eligibleTeams: List<String>) {
+        if (eligibleTeams.isEmpty()) {
+            showError("No eligible teams for toss.")
+            return
+        }
+        val winningTeam = eligibleTeams.random()
         _tossWinner.value = winningTeam
         logActivity("Toss won by $winningTeam")
     }
@@ -196,6 +232,7 @@ class AuctionViewModel(
             _teamDecisions.update { it + (currentBidder to "SKIP") }
             logActivity("$currentBidder skipped the turn for ${currentState.remainingPlayers.firstOrNull()?.name}")
 
+            // Check if all teams have skipped their turns
             if (_skippedTeams.value.size == teams.size) {
                 val currentPlayer = currentState.remainingPlayers.firstOrNull()
                 if (currentPlayer != null) {
@@ -204,11 +241,15 @@ class AuctionViewModel(
                             remainingPlayers = state.remainingPlayers.drop(1),
                             unsoldPlayers = state.unsoldPlayers + currentPlayer,
                             currentBid = 0,
-                            currentBidder = teams.first(),
+                            currentBidder = teams[(state.currentRound) % teams.size],
                             currentRound = state.currentRound + 1
                         )
                     }
                     logActivity("${currentPlayer.name} moved to unsold list.")
+                    _toastMessage.value = "${currentPlayer.name} moved to Unsold Player List"
+
+                    SoundUtils.playError()
+
                     _skippedTeams.value = emptySet()
                     _biddingTeams.value = emptySet()
                     _teamDecisions.value = emptyMap()
@@ -217,6 +258,17 @@ class AuctionViewModel(
                 val nextBidderIndex = (currentBidderIndex + 1) % teams.size
                 _auctionState.update { state ->
                     state.copy(currentBidder = teams[nextBidderIndex])
+                }
+
+                viewModelScope.launch {
+                    val newCurrentBidder = _auctionState.value.currentBidder
+                    val otherTeams = teams.filter { it != newCurrentBidder }
+                    val allOthersSkipped = otherTeams.all { it in _skippedTeams.value }
+                    val hasBid = newCurrentBidder in _biddingTeams.value
+
+                    if (allOthersSkipped && hasBid) {
+                        assignCurrentPlayer()
+                    }
                 }
             }
             previousBidder = null
@@ -245,7 +297,7 @@ class AuctionViewModel(
             logActivity("${currentPlayer.name} assigned to $team via toss for $maxBid points.")
             _toastMessage.update { "${currentPlayer.name} assigned to $team via toss" }
 
-            SoundUtils.playSound()
+            SoundUtils.playSuccess()
 
             state.copy(
                 remainingPlayers = state.remainingPlayers.drop(1),
@@ -262,43 +314,57 @@ class AuctionViewModel(
     }
 
     fun assignCurrentPlayer() {
-        _auctionState.update { state ->
-            val currentPlayer = state.remainingPlayers.firstOrNull() ?: return@update state
+        val currentState = _auctionState.value
+        val currentPlayer = currentState.remainingPlayers.firstOrNull() ?: return
 
-            if (state.currentBidder in _skippedTeams.value) {
-                showError("${state.currentBidder} has skipped this player and cannot be assigned.")
-                return@update state
+        val maxBidValue = _teamBids.value.values.maxOrNull() ?: 0
+        val highestBidders = _teamBids.value.filter { it.value == maxBidValue }.keys.toList()
+
+        when {
+            highestBidders.isEmpty() -> {
+                // No bids, move to unsold
+                _auctionState.update { state ->
+                    state.copy(
+                        remainingPlayers = state.remainingPlayers.drop(1),
+                        unsoldPlayers = state.unsoldPlayers + currentPlayer,
+                        currentBid = 0,
+                        currentBidder = state.teams.first(),
+                        currentRound = state.currentRound + 1
+                    )
+                }
+                logActivity("${currentPlayer.name} moved to unsold list.")
             }
-
-            val bidderBudget = state.teamBudgets[state.currentBidder] ?: 0
-            if (bidderBudget < state.currentBid) {
-                showError("${state.currentBidder} does not have enough budget to buy ${currentPlayer.name}.")
-                return@update state
+            highestBidders.size == 1 -> {
+                val winningTeam = highestBidders.first()
+                val updatedTeamPlayers = currentState.teamPlayers.toMutableMap().apply {
+                    this[winningTeam] = getOrDefault(winningTeam, mutableListOf()).also { it += currentPlayer }
+                }
+                val updatedBudgets = currentState.teamBudgets.toMutableMap().apply {
+                    this[winningTeam] = (this[winningTeam] ?: 0) - maxBidValue
+                }
+                logActivity("${currentPlayer.name} assigned to $winningTeam for $maxBidValue points.")
+                _toastMessage.value = "${currentPlayer.name} assigned to $winningTeam"
+                SoundUtils.playSuccess()
+                _auctionState.update { state ->
+                    state.copy(
+                        remainingPlayers = state.remainingPlayers.drop(1),
+                        teamPlayers = updatedTeamPlayers,
+                        teamBudgets = updatedBudgets,
+                        currentBid = state.remainingPlayers.getOrNull(1)?.basePoint ?: 0,
+                        currentRound = state.currentRound + 1,
+                        currentBidder = state.teams[(state.currentRound) % state.teams.size]
+                    )
+                }
             }
-
-            val updatedTeamPlayers = state.teamPlayers.toMutableMap().apply {
-                this[state.currentBidder] = getOrDefault(state.currentBidder, mutableListOf()).also { it += currentPlayer }
+            else -> {
+                performToss(highestBidders)
+                _showTossDialog.value = true
             }
-
-            val updatedBudgets = state.teamBudgets.toMutableMap().apply {
-                this[state.currentBidder] = bidderBudget - state.currentBid
-            }
-
-            logActivity("${currentPlayer.name} assigned to ${state.currentBidder} for ${state.currentBid} points.")
-            _toastMessage.update { "${currentPlayer.name} assigned to ${state.currentBidder}" }
-
-            SoundUtils.playSound()
-
-            state.copy(
-                remainingPlayers = state.remainingPlayers.drop(1),
-                teamPlayers = updatedTeamPlayers,
-                teamBudgets = updatedBudgets,
-                currentBid = state.remainingPlayers.getOrNull(1)?.basePoint ?: 0,
-                currentRound = state.currentRound + 1
-            )
         }
-        _biddingTeams.value = emptySet()
+
+        _teamBids.value = emptyMap()
         _skippedTeams.value = emptySet()
+        _biddingTeams.value = emptySet()
         _teamDecisions.value = emptyMap()
     }
 
@@ -332,8 +398,7 @@ class AuctionViewModel(
             }
 
             state.copy(
-                remainingPlayers = emptyList(),
-                teamPlayers = updatedTeamPlayers
+                remainingPlayers = emptyList(), teamPlayers = updatedTeamPlayers
             )
         }
     }
@@ -343,7 +408,8 @@ class AuctionViewModel(
             val updatedTeamPlayers = state.teamPlayers.toMutableMap()
             val unsoldPlayers = state.unsoldPlayers.toMutableList()
 
-            val teamCapacities = state.teams.associateWith { 6 - (updatedTeamPlayers[it]?.size ?: 0) }.toMutableMap()
+            val teamCapacities =
+                state.teams.associateWith { 6 - (updatedTeamPlayers[it]?.size ?: 0) }.toMutableMap()
 
             val playersToAssign = unsoldPlayers.toList()
 
@@ -361,8 +427,7 @@ class AuctionViewModel(
             }
 
             state.copy(
-                teamPlayers = updatedTeamPlayers,
-                unsoldPlayers = unsoldPlayers
+                teamPlayers = updatedTeamPlayers, unsoldPlayers = unsoldPlayers
             )
         }
         _biddingTeams.value = emptySet()
@@ -372,12 +437,52 @@ class AuctionViewModel(
         val teamBudget = _auctionState.value.teamBudgets[team] ?: 0
         val cappedBid = if (bid > 350) 350 else bid
 
-        return if (teamBudget >= cappedBid) {
-            true
-        } else {
+        // Check if the team can afford the bid
+        if (teamBudget < cappedBid) {
             showError("$team cannot place bid due to budget constraints.")
-            false
+            return false
         }
+
+        // Calculate the remaining budget after placing the bid
+        val remainingBudget = teamBudget - cappedBid
+
+        // Calculate the number of remaining players to be selected
+        val playersSelected = _auctionState.value.teamPlayers[team]?.size ?: 0
+        if (playersSelected >= 6) {
+            showError("$team has already selected 6 players.")
+            return false
+        }
+
+        val remainingPlayers = 6 - playersSelected - 1
+
+        // Check if the team can afford the remaining players
+        if (!canAffordRemainingPlayers(remainingBudget, remainingPlayers)) {
+            showError("$team cannot place bid as they won't be able to afford the remaining players.")
+            return false
+        }
+
+        return true
+    }
+
+    private fun canAffordRemainingPlayers(remainingBudget: Int, remainingPlayers: Int): Boolean {
+        val minimumRequiredBudget = remainingPlayers * minBid
+        return remainingBudget >= minimumRequiredBudget
+    }
+
+    fun calculateMaxBid(team: String): Int {
+        val teamBudget = _auctionState.value.teamBudgets[team] ?: 0
+        val playersSelected = _auctionState.value.teamPlayers[team]?.size ?: 0
+
+        // Handle edge cases
+        if (playersSelected >= 6) {
+            return 0 // Team has already selected 6 players
+        }
+
+        val playersRemaining = 6 - playersSelected - 1
+        val minRequiredBudget = playersRemaining * minBid
+
+        val maxBid = teamBudget - minRequiredBudget
+        return minOf(maxBid, 350)
     }
 
     private fun logActivity(message: String) {
