@@ -34,12 +34,12 @@
 
     <!-- Typography Styles -->
     <style name="TextAppearance.IndosamSportsArena.Headline" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:fontFamily">@font/montserrat_regular</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/black</item>
     </style>
 
     <style name="TextAppearance.IndosamSportsArena.Body" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:fontFamily">@font/montserrat_regular</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/gray</item>
     </style>
 </resources>

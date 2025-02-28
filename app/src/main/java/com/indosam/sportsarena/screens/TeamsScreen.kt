@@ -151,7 +151,7 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
                 // Player Name and Age
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = player.name,
+                        text = player.name ?: "Unknown Player",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -163,7 +163,7 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
                         color = Color.Gray
                     )
                     Text(
-                        text = player.address,
+                        text = player.address ?: "Address not available",
                         fontSize = 12.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
@@ -173,7 +173,7 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = player.aboutMe,
+                    text = player.aboutMe ?: "No description available",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
@@ -193,9 +193,9 @@ fun PlayerDisplay(player: Player, onNext: () -> Unit, onPrevious: () -> Unit) {
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        PlayerDetail("Batting Style", player.battingStyle)
+                        PlayerDetail("Batting Style", player.battingStyle ?: "Not specified")
                         HorizontalDivider()
-                        if (player.bowlingStyle.isNotEmpty()) {
+                        if (!player.bowlingStyle.isNullOrEmpty()) {
                             PlayerDetail("Bowling Style", player.bowlingStyle)
                             HorizontalDivider()
                         }
