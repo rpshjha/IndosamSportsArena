@@ -2,7 +2,10 @@ package com.indosam.sportsarena.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
@@ -30,6 +34,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -217,19 +223,54 @@ fun BoxLeagueScheduleCard(
                     }
                 }
                 // Display the winner captain's image if not null
-                schedule.winnerCaptainImage?.let { imageRes ->
-                    val resourceId = getImageResourceByName(imageRes)
-                    if (resourceId != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Image(
-                            painter = painterResource(id = resourceId),
-                            contentDescription = "Winner Captain",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp)
-                        )
-                    }
-                }
+                schedule.winnerCaptain?.let { WinnerCaptainImage(it, schedule.winnerCaptainImage) }
+
+//                schedule.winnerCaptainImage?.let { imageRes ->
+//                    val resourceId = getImageResourceByName(imageRes)
+//                    if (resourceId != null) {
+//                        Spacer(modifier = Modifier.height(12.dp))
+//
+//                        Box(
+//                            contentAlignment = Alignment.Center,
+//                            modifier = Modifier.fillMaxWidth()
+//                        ) {
+//                            Box(
+//                                modifier = Modifier
+//                                    .size(120.dp)
+//                                    .clip(CircleShape)
+//                                    .border(4.dp, MaterialTheme.colorScheme.primary, CircleShape)
+//                                    .background(Color.White)
+//                                    .shadow(8.dp, shape = CircleShape),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Image(
+//                                    painter = painterResource(id = resourceId),
+//                                    contentDescription = "Winner Captain",
+//                                    modifier = Modifier.size(110.dp)
+//                                )
+//                            }
+//
+//                            Image(
+//                                painter = painterResource(id = R.drawable.icc_trophy),
+//                                contentDescription = "Winner Trophy",
+//                                modifier = Modifier
+//                                    .size(32.dp)
+//                                    .align(Alignment.TopEnd)
+//                                    .offset(x = 12.dp, y = (-12).dp)
+//                            )
+//                        }
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//                        Text(
+//                            text = "🏆 ${schedule.winnerCaptain}",
+//                            fontSize = 16.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            color = MaterialTheme.colorScheme.primary,
+//                            modifier = Modifier.align(Alignment.CenterHorizontally)
+//                        )
+//                    }
+//                }
+
             }
         }
     }
@@ -297,6 +338,37 @@ fun BoxLeagueScheduleVisuals(boxNo: Int) {
     }
 }
 
+@Composable
+fun WinnerCaptainImage(winnerCaptain: String, winnerCaptainImage: String?) {
+    winnerCaptainImage?.let { imageRes ->
+        val resourceId = getImageResourceByName(imageRes)
+        if (resourceId != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(4.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        .background(Color.White)
+                        .shadow(8.dp, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = resourceId),
+                        contentDescription = "Winner Captain",
+                        modifier = Modifier.size(110.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
 fun getScheduleImageResource(boxNo: Int): Int? {
     return when (boxNo) {
         12 -> R.drawable.icc_box_league_schedule_12
@@ -333,8 +405,8 @@ fun getCaptainsImageResource(boxNo: Int): Int? {
 
 fun getImageResourceByName(name: String): Int? {
     return when (name) {
-        "ic_captain_5" -> R.drawable.icc_box_league_winner_5
-        "ic_captain_4" -> R.drawable.icc_box_league_winner_4
+        "icc_box_league_winner_5" -> R.drawable.icc_box_league_winner_5
+        "icc_box_league_winner_4" -> R.drawable.icc_box_league_winner_4
 
         else -> null
     }
