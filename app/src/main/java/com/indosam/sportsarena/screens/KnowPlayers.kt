@@ -48,7 +48,7 @@ import com.indosam.sportsarena.utils.DateUtils
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
 
 @Composable
-fun TeamsScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
+fun KnowPlayers(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val players by viewModel.players.collectAsState()
     var currentPlayerIndex by remember { mutableIntStateOf(0) }
 
@@ -260,9 +260,9 @@ fun PlayerIcon(player: Player, modifier: Modifier = Modifier) {
         if (!player.icon.isNullOrEmpty() && player.icon != "null") {
             val resId =
                 context.resources.getIdentifier(player.icon, "drawable", context.packageName)
-            if (resId != 0) resId else R.drawable.boy
+            if (resId != 0) resId else R.drawable.icons_boy
         } else {
-            R.drawable.boy
+            R.drawable.icons_boy
         }
     }
 

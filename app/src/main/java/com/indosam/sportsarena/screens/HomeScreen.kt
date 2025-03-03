@@ -104,15 +104,23 @@ fun HomeScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CustomButton(
-                        text = "Auction",
-                        onClick = { navController.navigate("auction") })
-                    Spacer(modifier = Modifier.height(18.dp))
-                    CustomButton(
-                        text = "Know Teams",
+                        text = "Meet the Players",
                         onClick = { navController.navigate("teams") })
+
                     Spacer(modifier = Modifier.height(18.dp))
-                    CustomButton(text = "Upcoming Box Schedule",
+
+                    CustomButton(text = "Box Cricket Fixtures",
                         onClick = { navController.navigate("schedule") })
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    CustomButton(
+                        text = "Player Auction",
+                        onClick = { navController.navigate("auction") })
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    CustomButton(text = "Gallery & Highlights", onClick = {})
                 }
             }
 
@@ -140,7 +148,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Image(
-                    painter = painterResource(id = R.drawable.instagram),
+                    painter = painterResource(id = R.drawable.icons_instagram),
                     contentDescription = "Instagram Icon",
                     modifier = Modifier
                         .height(28.dp)

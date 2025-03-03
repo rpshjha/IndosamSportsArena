@@ -44,7 +44,7 @@ fun BaseScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image
         Image(
-            painter = painterResource(id = R.drawable.screen_bg),
+            painter = painterResource(id = R.drawable.app_screen_bg),
             contentDescription = "Background Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -101,7 +101,7 @@ fun BaseScreen(
                     )
 
                     Image(
-                        painter = painterResource(id = R.drawable.icc_banner_1),
+                        painter = painterResource(id = R.drawable.icc_banner),
                         contentDescription = "App Logo",
                         modifier = Modifier
                             .height(30.dp)

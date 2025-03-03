@@ -3,6 +3,7 @@ package com.indosam.sportsarena.utils
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.indosam.sportsarena.models.BoxLeagueMatchDetails
 import com.indosam.sportsarena.models.Player
 import java.io.IOException
 
@@ -31,5 +32,16 @@ object JsonUtils {
     fun parseSelectedTeamInfo(json: String): Map<String, Pair<String, String>> {
         val gson = Gson()
         return gson.fromJson(json, object : TypeToken<Map<String, Pair<String, String>>>() {}.type)
+    }
+
+    fun loadMatchesFromJson(context: Context): List<BoxLeagueMatchDetails> {
+        return try {
+            val json = context.assets.open("matches.json").bufferedReader().use { it.readText() }
+            val listType = object : TypeToken<List<BoxLeagueMatchDetails>>() {}.type
+            Gson().fromJson(json, listType) ?: emptyList()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
 }

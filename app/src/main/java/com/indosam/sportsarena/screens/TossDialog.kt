@@ -89,7 +89,7 @@ fun TossDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.toss),
+                        painter = painterResource(id = R.drawable.icons_toss),
                         contentDescription = "Toss Winner",
                         modifier = Modifier
                             .size(64.dp)

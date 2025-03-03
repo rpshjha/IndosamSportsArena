@@ -23,7 +23,7 @@ import com.indosam.sportsarena.components.CustomButton
 import com.indosam.sportsarena.utils.JsonUtils
 
 @Composable
-fun KnowAuctionRulesScreen(navController: NavController) {
+fun KnowAuctionRules(navController: NavController) {
     val context = LocalContext.current
     val teams = JsonUtils.loadTeamsFromJson(context)
 

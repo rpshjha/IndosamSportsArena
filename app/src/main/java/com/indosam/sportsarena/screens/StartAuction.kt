@@ -44,7 +44,7 @@ import com.indosam.sportsarena.viewmodels.AuctionViewModel
 
 
 @Composable
-fun AuctionScreen(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
+fun StartAuction(navController: NavController, viewModel: AuctionViewModel = viewModel()) {
     val context = LocalContext.current
     val teams = remember { mutableStateOf(JsonUtils.loadTeamsFromJson(context)) }
     val players by viewModel.players.collectAsState()
