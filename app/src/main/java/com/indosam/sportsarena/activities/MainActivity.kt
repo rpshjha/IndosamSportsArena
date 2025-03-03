@@ -13,6 +13,7 @@ import com.indosam.sportsarena.screens.StartAuction
 import com.indosam.sportsarena.screens.HomeScreen
 import com.indosam.sportsarena.screens.KnowAuctionRules
 import com.indosam.sportsarena.screens.BoxCricketFixtures
+import com.indosam.sportsarena.screens.GalleryHighlightsScreen
 import com.indosam.sportsarena.screens.KnowPlayers
 
 class MainActivity : ComponentActivity() {
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
                         val context = LocalContext.current
                         BoxCricketFixtures(navController = navController, context = context)
                     }
+                    composable("gallery") { GalleryHighlightsScreen(navController) }
                 }
 
         }

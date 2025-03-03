@@ -120,7 +120,7 @@ fun HomeScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    CustomButton(text = "Gallery & Highlights", onClick = {})
+                    CustomButton(text = "Gallery & Highlights", onClick = {navController.navigate("gallery")})
                 }
             }
 
