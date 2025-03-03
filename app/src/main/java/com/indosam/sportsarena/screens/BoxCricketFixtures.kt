@@ -1,10 +1,16 @@
 package com.indosam.sportsarena.screens
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
@@ -31,11 +37,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,8 +56,7 @@ import com.indosam.sportsarena.utils.JsonUtils
 @Composable
 fun BoxCricketFixtures(navController: NavController, context: Context) {
     val upcomingSchedules = BoxLeagueMatchDetails(
-        "Indosam Box League 12", "09th March, 2025", "PlayAll Sports Complex, Sec 73",
-        listOf(
+        "Indosam Box League 12", "09th March, 2025", "PlayAll Sports Complex, Sec 73", listOf(
             "Match 1: Indosam Titans vs Indosam Warriors",
             "Match 2: Indosam Warriors vs Indosam Strikers",
             "Match 3: Indosam Strikers vs Indosam Titans"
@@ -100,8 +104,7 @@ fun UpcomingScheduleCard(upcomingSchedules: BoxLeagueMatchDetails) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             BoxLeagueScheduleCard(
-                schedule = upcomingSchedules,
-                boxNo = 12
+                schedule = upcomingSchedules, boxNo = 12
             )
         }
     }
@@ -126,8 +129,7 @@ fun PreviousMatchesCard(pastSchedulesState: MutableList<BoxLeagueState>) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             pastSchedulesState.forEachIndexed { index, state ->
-                BoxLeagueScheduleCard(
-                    schedule = state.schedule,
+                BoxLeagueScheduleCard(schedule = state.schedule,
                     boxNo = pastSchedulesState.size - index,
                     isExpanded = state.isExpanded,
                     onExpandToggle = {
@@ -135,8 +137,7 @@ fun PreviousMatchesCard(pastSchedulesState: MutableList<BoxLeagueState>) {
                         updatedList[index] = state.copy(isExpanded = !state.isExpanded)
                         pastSchedulesState.clear()
                         pastSchedulesState.addAll(updatedList)
-                    }
-                )
+                    })
             }
         }
     }
@@ -222,55 +223,8 @@ fun BoxLeagueScheduleCard(
                         }
                     }
                 }
-                // Display the winner captain's image if not null
-                schedule.winnerCaptain?.let { WinnerCaptainImage(it, schedule.winnerCaptainImage) }
 
-//                schedule.winnerCaptainImage?.let { imageRes ->
-//                    val resourceId = getImageResourceByName(imageRes)
-//                    if (resourceId != null) {
-//                        Spacer(modifier = Modifier.height(12.dp))
-//
-//                        Box(
-//                            contentAlignment = Alignment.Center,
-//                            modifier = Modifier.fillMaxWidth()
-//                        ) {
-//                            Box(
-//                                modifier = Modifier
-//                                    .size(120.dp)
-//                                    .clip(CircleShape)
-//                                    .border(4.dp, MaterialTheme.colorScheme.primary, CircleShape)
-//                                    .background(Color.White)
-//                                    .shadow(8.dp, shape = CircleShape),
-//                                contentAlignment = Alignment.Center
-//                            ) {
-//                                Image(
-//                                    painter = painterResource(id = resourceId),
-//                                    contentDescription = "Winner Captain",
-//                                    modifier = Modifier.size(110.dp)
-//                                )
-//                            }
-//
-//                            Image(
-//                                painter = painterResource(id = R.drawable.icc_trophy),
-//                                contentDescription = "Winner Trophy",
-//                                modifier = Modifier
-//                                    .size(32.dp)
-//                                    .align(Alignment.TopEnd)
-//                                    .offset(x = 12.dp, y = (-12).dp)
-//                            )
-//                        }
-//
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Text(
-//                            text = "🏆 ${schedule.winnerCaptain}",
-//                            fontSize = 16.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = MaterialTheme.colorScheme.primary,
-//                            modifier = Modifier.align(Alignment.CenterHorizontally)
-//                        )
-//                    }
-//                }
-
+                schedule.winnerCaptainImage?.let { WinnerCaptainImage(it) }
             }
         }
     }
@@ -300,7 +254,7 @@ fun BoxLeagueScheduleVisuals(boxNo: Int) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+        Row(horizontalArrangement = Arrangement.Center) {
             Image(
                 painter = painterResource(id = R.drawable.icc_logo),
                 contentDescription = "ICC Logo",
@@ -339,30 +293,48 @@ fun BoxLeagueScheduleVisuals(boxNo: Int) {
 }
 
 @Composable
-fun WinnerCaptainImage(winnerCaptain: String, winnerCaptainImage: String?) {
-    winnerCaptainImage?.let { imageRes ->
-        val resourceId = getImageResourceByName(imageRes)
-        if (resourceId != null) {
-            Spacer(modifier = Modifier.height(12.dp))
+fun WinnerCaptainImage(imageResName: String) {
+    getImageResourceByName(imageResName)?.let { resourceId ->
+        val isVisible = remember { mutableStateOf(true) }
 
+        AnimatedVisibility(
+            visible = isVisible.value,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp), contentAlignment = Alignment.Center
             ) {
-                Box(
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.elevatedCardElevation(8.dp),
                     modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .border(4.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        .background(Color.White)
-                        .shadow(8.dp, shape = CircleShape),
-                    contentAlignment = Alignment.Center
+                        .padding(16.dp)
+                        .border(2.dp, Color.White, RoundedCornerShape(16.dp))
                 ) {
-                    Image(
-                        painter = painterResource(id = resourceId),
-                        contentDescription = "Winner Captain",
-                        modifier = Modifier.size(110.dp)
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.winning_captain_logo),
+                            contentDescription = "Winning Captain Logo",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(Color.White)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Image(
+                            painter = painterResource(id = resourceId),
+                            contentDescription = "Winner Captain",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(Color.White)
+                        )
+                    }
                 }
             }
         }
