@@ -31,8 +31,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -76,16 +78,33 @@ fun HomeScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(64.dp))
 
-            Text(
-                text = "Welcome to Indosam Cricket Club",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold, fontSize = 38.sp, color = Color.White
-                ),
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 32.dp),
-                textAlign = TextAlign.Center
-            )
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Welcome to",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 38.sp,
+                        color = Color.White,
+                        fontFamily = FontFamily.Cursive
+                    ),
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = "Indosam Cricket Club",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 48.sp,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -120,7 +139,9 @@ fun HomeScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    CustomButton(text = "Gallery & Highlights", onClick = {navController.navigate("gallery")})
+                    CustomButton(
+                        text = "Gallery & Highlights",
+                        onClick = { navController.navigate("gallery") })
                 }
             }
 
