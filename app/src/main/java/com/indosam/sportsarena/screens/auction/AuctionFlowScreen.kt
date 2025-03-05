@@ -53,6 +53,7 @@ import com.indosam.sportsarena.screens.AuctionInfoButton
 import com.indosam.sportsarena.screens.BaseScreen
 import com.indosam.sportsarena.screens.TossDialog
 import com.indosam.sportsarena.utils.JsonUtils.parseSelectedTeamInfo
+import com.indosam.sportsarena.utils.ResourceUtils
 import com.indosam.sportsarena.utils.StringUtils.getFirstName
 import com.indosam.sportsarena.viewmodels.AuctionViewModel
 import kotlinx.coroutines.launch
@@ -153,7 +154,6 @@ private fun AuctionContent(
     onAssignUnsold: () -> Unit,
     viewModel: AuctionViewModel
 ) {
-    val biddingTeams = viewModel.biddingTeams.collectAsState().value
     val teamDecisions = viewModel.teamDecisions.collectAsState().value
 
     LazyColumn(
@@ -201,7 +201,6 @@ private fun AuctionContent(
                     onAssignRemaining = onAssignRemaining,
                     onAssignUnsold = onAssignUnsold,
                     teamDecisions = teamDecisions,
-                    biddingTeams = biddingTeams,
                     viewModel = viewModel
                 )
             }
@@ -343,13 +342,13 @@ private fun AuctionControls(
     onAssignRemaining: () -> Unit,
     onAssignUnsold: () -> Unit,
     teamDecisions: Map<String, String>,
-    biddingTeams: Set<String>,
     viewModel: AuctionViewModel
 ) {
     val showAssignCurrentDialog = remember { mutableStateOf(false) }
     val showAssignRemainingDialog = remember { mutableStateOf(false) }
     val allTeamsMadeDecision = teamDecisions.size == auctionState.teams.size
-    val isFirstBidderInRound = biddingTeams.isEmpty()
+    val isFirstBidderInRound = auctionState.currentBid == 0
+
 
     Column(
         modifier = Modifier
@@ -365,15 +364,10 @@ private fun AuctionControls(
             val hasPlacedBid = teamDecisions[currentBidder] == "BID"
             val hasSkipped = teamDecisions[currentBidder] == "SKIP"
 
-            val teamBudget = auctionState.teamBudgets[currentBidder] ?: 0
             val canAffordBid = viewModel.canPlaceBid(currentBidder, currentBidAmount + 50)
-
             val isPlaceBidEnabled = !hasSkipped && canAffordBid && remainingPlayers.isNotEmpty()
-
             val isSkipTurnEnabled = !hasPlacedBid && !hasSkipped && remainingPlayers.isNotEmpty()
-
             val isMoveToNextEnabled = !isPlaceBidEnabled && !isSkipTurnEnabled
-
             val maxBid = viewModel.calculateMaxBid(currentBidder)
 
             Text(
@@ -402,7 +396,7 @@ private fun AuctionControls(
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
             )
-            if (!isFirstBidderInRound) {
+            if (currentBid != 0) {
                 Text(
                     text = "Last Bid Amount: $currentBidAmount",
                     fontSize = 18.sp,
@@ -602,6 +596,9 @@ private fun TeamTable(
 
 @Composable
 private fun PointsTable(teamBudgets: Map<String, Int>) {
+    val context = LocalContext.current
+    val maxBudget = ResourceUtils.getMaxBudget(context)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -620,9 +617,11 @@ private fun PointsTable(teamBudgets: Map<String, Int>) {
                     )
                     teamBudgets.keys.forEach { team ->
                         val data = when (attribute) {
-                            "Points Utilised" -> (1000 - (teamBudgets[team] ?: 1000)).toString()
-                            "Points Left" -> (teamBudgets[team] ?: 1000).toString()
-                            "Total Budget" -> "1000"
+                            "Points Utilised" -> (maxBudget - (teamBudgets[team]
+                                ?: maxBudget)).toString()
+
+                            "Points Left" -> (teamBudgets[team] ?: maxBudget).toString()
+                            "Total Budget" -> maxBudget.toString()
                             else -> "N/A"
                         }
                         Text(

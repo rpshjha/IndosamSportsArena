@@ -4,19 +4,20 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class AuctionState(
-    val teams: List<String>,
+    val teams: List<Team>,
     val currentRound: Int,
-    val currentBidder: String = teams.firstOrNull() ?: "",
+    val currentBidder: String = teams.firstOrNull()?.name ?: "",
     val startingBidder: String = currentBidder,
     val currentBid: Int = 0,
     val remainingPlayers: List<Player> = emptyList(),
     val unsoldPlayers: List<Player> = emptyList(),
-    val teamPlayers: Map<String, MutableList<Player>> = teams.associateWith { mutableListOf() },
-    val teamBudgets: Map<String, Int> = teams.associateWith { 1000 },
-    val biddingTeams: MutableList<String> = teams.toMutableList()
+    val teamPlayers: Map<String, MutableList<Player>> = teams.associateBy({ it.name }, { mutableListOf() }),
+    val teamBudgets: Map<String, Int> = teams.associate { it.name to it.pointsLeft },
+
+    val biddingTeams: MutableList<String> = teams.map { it.name }.toMutableList()
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        teams = parcel.createStringArrayList() ?: emptyList(),
+        teams = parcel.createTypedArrayList(Team.CREATOR) ?: emptyList(),
         currentRound = parcel.readInt(),
         currentBidder = parcel.readString() ?: "",
         startingBidder = parcel.readString() ?: "",
@@ -43,7 +44,7 @@ data class AuctionState(
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeStringList(teams)
+        parcel.writeTypedList(teams)
         parcel.writeInt(currentRound)
         parcel.writeString(currentBidder)
         parcel.writeString(startingBidder)

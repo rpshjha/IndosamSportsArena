@@ -55,7 +55,7 @@ fun StartAuction(navController: NavController, viewModel: AuctionViewModel = vie
     val teamSelections = remember {
         mutableStateMapOf<String, Pair<String, String>>().apply {
             teams.value.forEach { team ->
-                this[team] = Pair("", "")
+                this[team.name] = Pair("", "")
             }
         }
     }
@@ -82,15 +82,15 @@ fun StartAuction(navController: NavController, viewModel: AuctionViewModel = vie
             ) {
                 items(teams.value.size) { index ->
                     TeamCard(
-                        team = Team(teams.value[index]),
+                        team = teams.value[index],
                         allPlayers = players.map { it.name },
                         selectedPlayers = selectedPlayers,
-                        captain = teamSelections[teams.value[index]]?.first ?: "",
-                        viceCaptain = teamSelections[teams.value[index]]?.second ?: "",
+                        captain = teamSelections[teams.value[index].name]?.first ?: "",
+                        viceCaptain = teamSelections[teams.value[index].name]?.second ?: "",
                         onSelectionChanged = { captain, viceCaptain ->
-                            teamSelections[teams.value[index]] = Pair(captain, viceCaptain)
+                            teamSelections[teams.value[index].name] = Pair(captain, viceCaptain)
                             viewModel.updateSelectedTeamInfo(
-                                teams.value[index],
+                                teams.value[index].name,
                                 captain,
                                 viceCaptain
                             )
@@ -200,7 +200,10 @@ fun DropdownMenuComponent(
     }
 }
 
-private fun isAuctionReady(selectedTeamInfo: Map<String, Pair<String, String>>, totalTeams: Int): Boolean {
+private fun isAuctionReady(
+    selectedTeamInfo: Map<String, Pair<String, String>>,
+    totalTeams: Int
+): Boolean {
     return selectedTeamInfo.size == totalTeams &&
             selectedTeamInfo.all { it.value.first.isNotEmpty() && it.value.second.isNotEmpty() }
 }

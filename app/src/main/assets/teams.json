@@ -1,5 +1,23 @@
 [
-  "Indosam Warriors",
-  "Indosam Strikers",
-  "Indosam Titans"
+  {
+    "name": "Indosam Warriors",
+    "captain": null,
+    "viceCaptain": null,
+    "players": [],
+    "pointsLeft": 1000
+  },
+  {
+    "name": "Indosam Strikers",
+    "captain": null,
+    "viceCaptain": null,
+    "players": [],
+    "pointsLeft": 1000
+  },
+  {
+    "name": "Indosam Titans",
+    "captain": null,
+    "viceCaptain": null,
+    "players": [],
+    "pointsLeft": 1000
+  }
 ]

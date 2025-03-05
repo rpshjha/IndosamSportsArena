@@ -379,6 +379,9 @@ fun getImageResourceByName(name: String): Int? {
     return when (name) {
         "icc_box_league_winner_5" -> R.drawable.icc_box_league_winner_5
         "icc_box_league_winner_4" -> R.drawable.icc_box_league_winner_4
+        "icc_box_league_winner_3" -> R.drawable.icc_box_league_winner_3
+        "icc_box_league_winner_2" -> R.drawable.icc_box_league_winner_2
+        "icc_box_league_winner_1" -> R.drawable.icc_box_league_winner_1
 
         else -> null
     }
