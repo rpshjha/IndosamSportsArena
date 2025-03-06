@@ -49,13 +49,15 @@ import androidx.navigation.NavController
 import com.indosam.sportsarena.R
 import kotlinx.coroutines.delay
 
+
 @Composable
 fun HomeScreen(navController: NavController) {
     LocalContext.current
 
     Scaffold(bottomBar = {
         BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.surface, contentColor = Color.Black
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -108,13 +110,22 @@ fun HomeScreenContent(innerPadding: PaddingValues) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFf4f4f4),
+                        MaterialTheme.colorScheme.secondaryContainer,
                         Color.White
                     )
                 )
             )
             .padding(innerPadding)
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.home_screen_background),
+            contentDescription = "Background Image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(alpha = 0.2f)
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -235,7 +246,7 @@ fun LogoAndTrophySection() {
         horizontalArrangement = Arrangement.spacedBy(
             8.dp,
             Alignment.CenterHorizontally
-        ) // Less space between images
+        )
     ) {
         Image(
             painter = painterResource(id = R.drawable.icc_logo),
