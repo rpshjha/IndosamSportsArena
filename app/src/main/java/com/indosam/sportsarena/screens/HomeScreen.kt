@@ -2,6 +2,7 @@ package com.indosam.sportsarena.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -52,8 +55,7 @@ fun HomeScreen(navController: NavController) {
 
     Scaffold(bottomBar = {
         BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = Color.Black
+            containerColor = MaterialTheme.colorScheme.surface, contentColor = Color.Black
         ) {
             Row(
                 modifier = Modifier
@@ -67,8 +69,7 @@ fun HomeScreen(navController: NavController) {
                     label = { Text("Teams") })
                 NavigationBarItem(icon = {
                     Icon(
-                        painterResource(R.drawable.ic_schedule),
-                        "Schedule"
+                        painterResource(R.drawable.ic_schedule), "Schedule"
                     )
                 },
                     selected = false,
@@ -76,8 +77,7 @@ fun HomeScreen(navController: NavController) {
                     label = { Text("Schedule") })
                 NavigationBarItem(icon = {
                     Icon(
-                        painterResource(R.drawable.ic_auction),
-                        "Auction"
+                        painterResource(R.drawable.ic_auction), "Auction"
                     )
                 },
                     selected = false,
@@ -85,8 +85,7 @@ fun HomeScreen(navController: NavController) {
                     label = { Text("Auction") })
                 NavigationBarItem(icon = {
                     Icon(
-                        painterResource(R.drawable.ic_gallery),
-                        "Gallery"
+                        painterResource(R.drawable.ic_gallery), "Gallery"
                     )
                 },
                     selected = false,
@@ -107,8 +106,11 @@ fun HomeScreenContent(innerPadding: PaddingValues) {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.radialGradient(
-                    colors = listOf(MaterialTheme.colorScheme.surface, Color.White) as List<Color>,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFf4f4f4),
+                        Color.White
+                    )
                 )
             )
             .padding(innerPadding)
@@ -122,18 +124,18 @@ fun HomeScreenContent(innerPadding: PaddingValues) {
 
             ImageCarousel()
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Welcome to", style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold, fontSize = 38.sp, color = Color.Black
+                    fontWeight = FontWeight.ExtraBold, fontSize = 32.sp, color = Color.Black
                 ), textAlign = TextAlign.Center
             )
 
             Text(
                 text = "Indosam Cricket Club", style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 48.sp,
+                    fontSize = 42.sp,
                     color = MaterialTheme.colorScheme.primary
                 ), textAlign = TextAlign.Center
             )
@@ -151,7 +153,9 @@ fun HomeScreenContent(innerPadding: PaddingValues) {
 @Composable
 fun ImageCarousel() {
     val images = listOf(
-        R.drawable.warriors_bg_logo, R.drawable.titans_bg_logo, R.drawable.strikers_bg_logo
+        R.drawable.warriors_bg_logo,
+        R.drawable.titans_bg_logo,
+        R.drawable.strikers_bg_logo
     )
 
     val pagerState = rememberPagerState(pageCount = { images.size })
@@ -169,48 +173,81 @@ fun ImageCarousel() {
         }
     }
 
-    HorizontalPager(
-        state = pagerState, modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    ) { page ->
-        Image(
-            painter = painterResource(id = images[page]),
-            contentDescription = "Carousel Image",
-            modifier = Modifier.fillMaxWidth(),
-            contentScale = ContentScale.Crop
-        )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        ) { page ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .background(Color.Black)
+            ) {
+                Image(
+                    painter = painterResource(id = images[page]),
+                    contentDescription = "Carousel Image",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(alpha = 0.8f)
+                        .animateContentSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        // Page Indicator (Dots)
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(
+                12.dp,
+                Alignment.CenterHorizontally
+            )
+        ) {
+            images.indices.forEach { index ->
+                Box(
+                    modifier = Modifier
+                        .size(if (index == currentIndex) 10.dp else 8.dp)
+                        .background(
+                            if (index == currentIndex) MaterialTheme.colorScheme.primary
+                            else Color.Gray,
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
     }
 }
 
+
 @Composable
 fun LogoAndTrophySection() {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            8.dp,
+            Alignment.CenterHorizontally
+        ) // Less space between images
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.icc_logo),
-                contentDescription = "ICC Logo",
-                modifier = Modifier
-                    .size(width = 100.dp, height = 150.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Image(
-                painter = painterResource(id = R.drawable.icc_trophy),
-                contentDescription = "ICC Trophy",
-                modifier = Modifier
-                    .size(width = 100.dp, height = 150.dp)
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.icc_logo),
+            contentDescription = "ICC Logo",
+            modifier = Modifier.size(100.dp)
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.icc_trophy),
+            contentDescription = "ICC Trophy",
+            modifier = Modifier.size(100.dp)
+        )
     }
 }
 
@@ -218,19 +255,16 @@ fun LogoAndTrophySection() {
 fun SocialMediaLink() {
     val context = LocalContext.current
 
-    Row(
-        modifier = Modifier
-            .clickable {
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://www.instagram.com/indosamcricket/")
-                )
-                context.startActivity(intent)
-            }
-            .padding(vertical = 20.dp),
+    Row(modifier = Modifier
+        .clickable {
+            val intent = Intent(
+                Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/indosamcricket/")
+            )
+            context.startActivity(intent)
+        }
+        .padding(vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
+        horizontalArrangement = Arrangement.Center) {
         Text(
             text = "Follow us on",
             color = Color.Black,
