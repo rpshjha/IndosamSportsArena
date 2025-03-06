@@ -315,25 +315,30 @@ fun WinnerCaptainImage(imageResName: String) {
                         .border(2.dp, Color.White, RoundedCornerShape(16.dp))
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.SpaceAround, // Changed to SpaceAround
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxSize()
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.winning_captain_logo),
-                            contentDescription = "Winning Captain Logo",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .background(Color.White)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Image(
-                            painter = painterResource(id = resourceId),
-                            contentDescription = "Winner Captain",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .background(Color.White)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Image(
+                                painter = painterResource(id = R.drawable.winning_captain_logo),
+                                contentDescription = "Winning Captain Logo",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .background(Color.White)
+                            )
+                        }
+                        Box(contentAlignment = Alignment.Center) {
+                            Image(
+                                painter = painterResource(id = resourceId),
+                                contentDescription = "Winner Captain",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .background(Color.White)
+                            )
+                        }
                     }
                 }
             }
