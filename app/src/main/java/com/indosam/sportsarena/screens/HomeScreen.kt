@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -62,13 +63,14 @@ fun HomeScreen(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceAround
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 NavigationBarItem(icon = { Icon(painterResource(R.drawable.ic_teams), "Teams") },
                     selected = false,
                     onClick = { navController.navigate("teams") },
-                    label = { Text("Teams") })
+                    label = { Text("Teams", maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 NavigationBarItem(icon = {
                     Icon(
                         painterResource(R.drawable.ic_schedule), "Schedule"
@@ -76,7 +78,7 @@ fun HomeScreen(navController: NavController) {
                 },
                     selected = false,
                     onClick = { navController.navigate("schedule") },
-                    label = { Text("Schedule") })
+                    label = { Text("Schedule", maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 NavigationBarItem(icon = {
                     Icon(
                         painterResource(R.drawable.ic_auction), "Auction"
@@ -84,7 +86,7 @@ fun HomeScreen(navController: NavController) {
                 },
                     selected = false,
                     onClick = { navController.navigate("auction") },
-                    label = { Text("Auction") })
+                    label = { Text("Auction", maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 NavigationBarItem(icon = {
                     Icon(
                         painterResource(R.drawable.ic_gallery), "Gallery"
@@ -92,7 +94,7 @@ fun HomeScreen(navController: NavController) {
                 },
                     selected = false,
                     onClick = { navController.navigate("gallery") },
-                    label = { Text("Gallery") })
+                    label = { Text("Gallery", maxLines = 1, overflow = TextOverflow.Ellipsis) })
             }
         }
     }) { innerPadding ->
