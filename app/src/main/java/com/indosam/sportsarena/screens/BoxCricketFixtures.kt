@@ -55,15 +55,9 @@ import com.indosam.sportsarena.utils.JsonUtils
 
 @Composable
 fun BoxCricketFixtures(navController: NavController, context: Context) {
-    val upcomingSchedules = BoxLeagueMatchDetails(
-        "Indosam Box League 12", "09th March, 2025", "PlayAll Sports Complex, Sec 73", listOf(
-            "Match 1: Indosam Titans vs Indosam Warriors",
-            "Match 2: Indosam Warriors vs Indosam Strikers",
-            "Match 3: Indosam Strikers vs Indosam Titans"
-        )
-    )
-
-    val pastSchedules = JsonUtils.loadMatchesFromJson(context)
+    val allSchedules = JsonUtils.loadMatchesFromJson(context)
+    val upcomingSchedules = allSchedules.find { it.isUpcoming }
+    val pastSchedules = allSchedules.filter { !it.isUpcoming }
 
     val pastSchedulesState =
         remember { mutableStateListOf(*pastSchedules.map { BoxLeagueState(it) }.toTypedArray()) }
@@ -74,8 +68,8 @@ fun BoxCricketFixtures(navController: NavController, context: Context) {
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            item {
-                UpcomingScheduleCard(upcomingSchedules)
+            upcomingSchedules?.let {
+                item { UpcomingScheduleCard(it, allSchedules.size) }
             }
 
             item {
@@ -86,7 +80,7 @@ fun BoxCricketFixtures(navController: NavController, context: Context) {
 }
 
 @Composable
-fun UpcomingScheduleCard(upcomingSchedules: BoxLeagueMatchDetails) {
+fun UpcomingScheduleCard(upcomingSchedules: BoxLeagueMatchDetails, boxNo: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,7 +98,7 @@ fun UpcomingScheduleCard(upcomingSchedules: BoxLeagueMatchDetails) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             BoxLeagueScheduleCard(
-                schedule = upcomingSchedules, boxNo = 12
+                schedule = upcomingSchedules, boxNo = boxNo
             )
         }
     }

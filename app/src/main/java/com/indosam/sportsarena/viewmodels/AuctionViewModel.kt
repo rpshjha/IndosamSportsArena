@@ -90,18 +90,19 @@ class AuctionViewModel(
         _auctionState.update { it.copy(remainingPlayers = players) }
     }
 
-    fun handleBid() {
+    fun handleBid(newBid: Int) {
         val currentState = _auctionState.value
         val currentBidder = currentState.currentBidder
         val minBid = currentState.remainingPlayers.firstOrNull()?.basePoint ?: 0
-        val isFirstBidderInRound = currentState.currentBid == 0
+        val isFirstBidder = currentState.currentBid == 0
 
-        val bid = when {
-            isFirstBidderInRound -> minBid
-            else -> currentState.currentBid + 50
+        val expectedBid = if (isFirstBidder) minBid else currentState.currentBid + 50
+        if (newBid != expectedBid) {
+            showError("Invalid bid amount. Expected $expectedBid.")
+            return
         }
-        val finalBid = maxOf(minBid, bid).coerceAtMost(maxBid)
 
+        val finalBid = newBid.coerceAtMost(maxBid)
         if (finalBid > maxBid) {
             showError("Bid cannot exceed $maxBid points.")
             return
@@ -109,7 +110,7 @@ class AuctionViewModel(
 
         if (!canPlaceBid(currentBidder, finalBid)) return
 
-        _teamBids.update { it + (currentBidder to finalBid) }
+        _teamBids.value += (currentBidder to finalBid)
         _auctionState.update { it.copy(currentBid = finalBid) }
         previousBidder = currentBidder
         _teamDecisions.update { it + (currentBidder to "BID") }
@@ -175,6 +176,13 @@ class AuctionViewModel(
                 assignCurrentPlayer()
             }
         }
+    }
+
+    fun stayOnCurrentBid() {
+        val currentBidder = _auctionState.value.currentBidder
+        // Record decision without changing current bid
+        _teamDecisions.update { it + (currentBidder to "BID") }
+        moveToNextBidder(_auctionState.value.currentBid + 50)
     }
 
     private fun performToss(eligibleTeams: List<String>) {
@@ -479,7 +487,8 @@ class AuctionViewModel(
     }
 
     private fun logActivity(message: String) {
-        _auctionLogs.update { it + AuctionLog(message) }
+        val currentRound = _auctionState.value.currentRound
+        _auctionLogs.update { it + AuctionLog(currentRound, message) }
     }
 
     private fun showError(message: String) {

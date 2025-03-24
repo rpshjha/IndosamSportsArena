@@ -97,32 +97,31 @@ fun HighlightsCarousel() {
         ),
     )
 
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
+    LazyRow(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(highlights) { highlight ->
-            HighlightCard(highlight)
+            HighlightCard(highlight, Modifier.width(300.dp).height(350.dp))
         }
     }
 }
 
 @Composable
-fun HighlightCard(highlight: Highlight) {
+fun HighlightCard(highlight: Highlight, modifier: Modifier = Modifier) {
     var showDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
-            .padding(12.dp)
-            .width(300.dp)
-            .height(350.dp),
+        modifier = modifier.padding(vertical = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = highlight.title,
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 3,
@@ -136,6 +135,7 @@ fun HighlightCard(highlight: Highlight) {
             Box(
                 modifier = Modifier
                     .height(200.dp)
+                    .fillMaxWidth()
                     .weight(0.6f)
             ) {
                 Image(
@@ -153,8 +153,9 @@ fun HighlightCard(highlight: Highlight) {
 
             Text(
                 text = highlight.description,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.weight(0.1f)
             )
         }
@@ -192,7 +193,7 @@ fun GalleryItem(imageRes: Int) {
         painter = painterResource(id = imageRes),
         contentDescription = "Gallery Image",
         modifier = Modifier
-            .padding(8.dp)
+            .padding(4.dp)
             .fillMaxWidth()
             .height(150.dp)
             .clickable { showDialog = true },
@@ -223,7 +224,7 @@ fun FullScreenDialog(imageRes: Int, onClose: () -> Unit) {
                         Icons.Filled.Close,
                         contentDescription = "Close",
                         tint = Color.White,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 }
             }

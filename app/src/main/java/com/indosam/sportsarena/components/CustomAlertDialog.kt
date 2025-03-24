@@ -12,8 +12,10 @@ fun CustomAlertDialog(
     title: String,
     text: String,
     confirmText: String = "Yes",
+    secondaryButtonText: String? = null,
     dismissText: String = "No",
     onConfirm: () -> Unit,
+    onSecondary: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     if (showDialog.value) {
@@ -33,11 +35,20 @@ fun CustomAlertDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDialog.value = false
-                    onDismiss()
-                }) {
-                    Text(dismissText)
+                if (secondaryButtonText != null && onSecondary != null) {
+                    TextButton(onClick = {
+                        onSecondary()
+                        showDialog.value = false
+                    }) {
+                        Text(secondaryButtonText)
+                    }
+                } else {
+                    TextButton(onClick = {
+                        showDialog.value = false
+                        onDismiss()
+                    }) {
+                        Text(dismissText)
+                    }
                 }
             }
         )

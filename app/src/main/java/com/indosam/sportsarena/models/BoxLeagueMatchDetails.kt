@@ -8,5 +8,6 @@ data class BoxLeagueMatchDetails(
     val winnerCaptain: String? = null,    // Winning captain (nullable)
     val manOfTheMatch: String? = null,    // Man of the match (nullable)
     val highlights: String? = null,       // Match highlights (nullable)
-    val winnerCaptainImage: String? = null // Image resource for winning captain (nullable)
+    val winnerCaptainImage: String? = null, // Image resource for winning captain (nullable)
+    val isUpcoming: Boolean
 )
