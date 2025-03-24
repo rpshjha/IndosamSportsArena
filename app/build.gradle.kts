@@ -21,6 +21,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -30,21 +38,32 @@ android {
         }
     }
 
+// ✅
+    applicationVariants.all {
+        val buildTypeName = buildType.name
+        outputs.all {
+            val outputFileName = "Indosam_CricketClub_${buildTypeName}_${versionName}.apk"
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                outputFileName
+        }
+    }
+
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17 // Update to Java 17
+        sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "17" // Update to Java 17
+        jvmTarget = "17"
     }
 
     buildFeatures {
-        compose = true // Enable Jetpack Compose
+        compose = true
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.0" // Match with your Kotlin version
+        kotlinCompilerExtensionVersion = "1.5.0"
     }
 
     packaging {
